@@ -20,6 +20,12 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setIsAuthChecking(false);
+      // Si el usuario no es admin, su vista por defecto será ventas en vez del dashboard
+      if (currentUser && currentUser.email !== 'admin@ghc.com') {
+        setActiveView('ventas');
+      } else {
+        setActiveView('dashboard');
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -37,6 +43,8 @@ function App() {
   const handleLogout = () => {
     signOut(auth);
   };
+  
+  const isAdmin = user && user.email === 'admin@ghc.com';
   
   // --- STATES (Firebase Firestore) ---
   const [ventas, addVenta, deleteVenta, updateVenta] = useFirestoreCollection('ghc_ventas');
@@ -212,8 +220,8 @@ function App() {
                   <td style={{ fontWeight: 500, color: 'var(--accent)' }}>{t.style}</td><td style={{ color: 'var(--text-muted)' }}>{t.date}</td><td style={{ fontWeight: 600 }}>{t.code}</td><td>{t.quantity}</td><td style={{ fontWeight: 600, color: '#60a5fa' }}>{t.provider}</td><td>{formatCurrency(t.unitPrice)}</td><td style={{ fontWeight: 600 }}>{formatCurrency(t.totalCost)}</td><td style={{ color: '#34d399', fontWeight: 600 }}>{formatCurrency(t.paidAmount)}</td><td style={{ color: 'var(--text-muted)' }}>{t.paymentDate || '-'}</td>
                   <td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : (saldo > 0 ? formatCurrency(saldo) : `-${formatCurrency(Math.abs(saldo))}`)}</span></td>
                   <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                    <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(t, setFormTaller, setIsModalTallerOpen)}>✎</button>
-                    <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteTaller(t.id)}>🗑</button>
+                    <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} title="Editar" onClick={() => handleEdit(t, setFormTaller, setIsModalTallerOpen)}>✎</button>
+                    {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => handleDeleteTaller(t.id)}>🗑</button>}
                   </td>
                 </tr>
               )
@@ -258,15 +266,27 @@ function App() {
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>GHC <span>Gorras</span></div>
-        <div style={{ padding: '0 16px', marginBottom: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Principal</div>
-        <nav className="nav-menu" style={{ marginBottom: '24px' }}>
-          <a className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}>Caja General</a>
-          <a className={`nav-item ${activeView === 'ventas' ? 'active' : ''}`} onClick={() => setActiveView('ventas')}>Cobros a Clientes</a>
-        </nav>
+        
+        {isAdmin && (
+          <>
+            <div style={{ padding: '0 16px', marginBottom: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Principal</div>
+            <nav className="nav-menu" style={{ marginBottom: '24px' }}>
+              <a className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}>Caja General</a>
+              <a className={`nav-item ${activeView === 'ventas' ? 'active' : ''}`} onClick={() => setActiveView('ventas')}>Cobros a Clientes</a>
+            </nav>
+          </>
+        )}
+        
+        {!isAdmin && (
+          <nav className="nav-menu" style={{ marginBottom: '24px' }}>
+            <a className={`nav-item ${activeView === 'ventas' ? 'active' : ''}`} onClick={() => setActiveView('ventas')}>Entregas y Cobros</a>
+          </nav>
+        )}
+
         <div style={{ padding: '0 16px', marginBottom: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Egresos y Pagos</div>
         <nav className="nav-menu">
-          <a className={`nav-item ${activeView === 'planilla' ? 'active' : ''}`} onClick={() => setActiveView('planilla')}>Planilla de Personal</a>
-          <a className={`nav-item ${activeView === 'sunat' ? 'active' : ''}`} onClick={() => setActiveView('sunat')}>Contador y SUNAT</a>
+          {isAdmin && <a className={`nav-item ${activeView === 'planilla' ? 'active' : ''}`} onClick={() => setActiveView('planilla')}>Planilla de Personal</a>}
+          {isAdmin && <a className={`nav-item ${activeView === 'sunat' ? 'active' : ''}`} onClick={() => setActiveView('sunat')}>Contador y SUNAT</a>}
           <a className={`nav-item ${activeView === 'insumos' ? 'active' : ''}`} onClick={() => setActiveView('insumos')}>Compras / Créditos</a>
           <a className={`nav-item ${activeView === 'corte' ? 'active' : ''}`} onClick={() => setActiveView('corte')}>Producción: Corte</a>
           <a className={`nav-item ${activeView === 'costura' ? 'active' : ''}`} onClick={() => setActiveView('costura')}>Producción: Costura</a>
@@ -275,6 +295,7 @@ function App() {
           <a className={`nav-item ${activeView === 'cajachica' ? 'active' : ''}`} onClick={() => setActiveView('cajachica')}>Caja Chica</a>
         </nav>
         <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
+          <div style={{ padding: '0 16px', marginBottom: '8px', fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600 }}>👤 {user.email}</div>
           <button className="nav-item" style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--danger)', display: 'flex', justifyContent: 'flex-start', cursor: 'pointer' }} onClick={handleLogout}>🚪 Cerrar Sesión</button>
         </div>
       </aside>
@@ -357,8 +378,8 @@ function App() {
                           <td style={{ fontWeight: 600 }}>{v.code} <br/><span style={{ color: 'var(--accent)', fontSize: '0.75rem' }}>{v.model}</span></td>
                           <td>{v.responsible}</td><td>{v.quantity}</td><td>{formatCurrency(v.price)}</td><td style={{ fontWeight: 600 }}>{formatCurrency(v.totalValue)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(v.paidAmount)}</td><td><span className="badge badge-blue">{v.paymentType}</span><br/><span style={{ fontSize: '0.7rem' }}>{v.bank}</span></td><td style={{ fontWeight: 500 }}>{v.client}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td>
                           <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(v, setFormVenta, setIsModalVentasOpen)}>✎</button>
-                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteVenta(v.id)}>🗑</button>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} title="Editar" onClick={() => handleEdit(v, setFormVenta, setIsModalVentasOpen)}>✎</button>
+                            {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => handleDeleteVenta(v.id)}>🗑</button>}
                           </td>
                         </tr>
                       )
@@ -392,8 +413,8 @@ function App() {
                         <td style={{ fontWeight: 600 }}>{p.name}</td>
                         <td style={{ color: 'var(--text-muted)' }}>{p.periodFrom || '-'}</td><td style={{ color: 'var(--text-muted)' }}>{p.periodTo || '-'}</td><td style={{ fontWeight: 500 }}>{p.hours ? p.hours : '-'}</td><td style={{ fontWeight: 600 }}>{formatCurrency(p.total)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.paidAmount)}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td><td style={{ color: 'var(--text-muted)' }}>{p.paymentDate || '-'}</td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(p, setFormPlanilla, setIsModalPlanillaOpen)}>✎</button>
-                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeletePlanilla(p.id)}>🗑</button>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} title="Editar" onClick={() => handleEdit(p, setFormPlanilla, setIsModalPlanillaOpen)}>✎</button>
+                            {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => handleDeletePlanilla(p.id)}>🗑</button>}
                         </td>
                       </tr>
                     )})}
@@ -430,8 +451,8 @@ function App() {
                         <td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td>
                         <td style={{ color: 'var(--text-muted)' }}>{s.paymentDate || '-'}</td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(s, setFormSunat, setIsModalSunatOpen)}>✎</button>
-                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteSunat(s.id)}>🗑</button>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} title="Editar" onClick={() => handleEdit(s, setFormSunat, setIsModalSunatOpen)}>✎</button>
+                            {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => handleDeleteSunat(s.id)}>🗑</button>}
                         </td>
                       </tr>
                     )})}
@@ -463,8 +484,8 @@ function App() {
                       <tr key={i.id}>
                         <td style={{ color: 'var(--text-muted)' }}>{i.date}</td><td style={{ fontWeight: 600 }}>{i.provider}</td><td style={{ fontWeight: 500 }}>{i.invoice}</td><td style={{ fontWeight: 600 }}>{formatCurrency(i.totalCost)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(i.paidAmount)}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td><td style={{ color: 'var(--text-muted)' }}>{i.paymentDate || '-'}</td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(i, setFormInsumo, setIsModalInsumosOpen)}>✎</button>
-                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteInsumo(i.id)}>🗑</button>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} title="Editar" onClick={() => handleEdit(i, setFormInsumo, setIsModalInsumosOpen)}>✎</button>
+                            {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => handleDeleteInsumo(i.id)}>🗑</button>}
                         </td>
                       </tr>
                     )})}
@@ -503,8 +524,8 @@ function App() {
                         <td style={{ textAlign: 'right', fontWeight: 600, color: '#34d399' }}>{c.type === 'Ingreso' ? `+ ${formatCurrency(c.amount)}` : '-'}</td>
                         <td style={{ textAlign: 'right', fontWeight: 600, color: '#ef4444' }}>{c.type === 'Egreso' ? `- ${formatCurrency(c.amount)}` : '-'}</td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(c, setFormCajaChica, setIsModalCajaChicaOpen)}>✎</button>
-                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteCajaChica(c.id)}>🗑</button>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} title="Editar" onClick={() => handleEdit(c, setFormCajaChica, setIsModalCajaChicaOpen)}>✎</button>
+                            {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => handleDeleteCajaChica(c.id)}>🗑</button>}
                         </td>
                       </tr>
                     ))}
