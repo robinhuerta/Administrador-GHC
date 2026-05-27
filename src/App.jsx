@@ -1,11 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useFirestoreCollection } from './hooks/useFirestoreCollection';
+import { auth } from './firebase';
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
 import Modal from './components/Modal';
 import './index.css';
 
 function App() {
   const [activeView, setActiveView] = useState('dashboard'); 
   const [editingId, setEditingId] = useState(null);
+
+  // --- AUTH STATES ---
+  const [user, setUser] = useState(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAuthChecking(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+    try {
+      await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+    } catch (error) {
+      setLoginError("Credenciales incorrectas. Intenta de nuevo.");
+    }
+  };
+
+  const handleLogout = () => {
+    signOut(auth);
+  };
   
   // --- STATES (Firebase Firestore) ---
   const [ventas, addVenta, deleteVenta, updateVenta] = useFirestoreCollection('ghc_ventas');
@@ -193,6 +224,36 @@ function App() {
     </div>
   );
 
+  if (isAuthChecking) {
+    return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'var(--text-muted)' }}>Cargando sistema...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', width: '100vw', background: 'var(--bg-dark)' }}>
+        <div className="glass-panel" style={{ width: '90%', maxWidth: '400px', padding: '40px 24px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px' }}><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            <h1 style={{ fontSize: '1.5rem', marginBottom: '8px' }}>GHC Gorras ERP</h1>
+            <p className="text-muted">Acceso restringido al personal autorizado</p>
+          </div>
+          {loginError && <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '0.9rem', textAlign: 'center' }}>{loginError}</div>}
+          <form onSubmit={handleLogin}>
+            <div className="form-group">
+              <label>Correo Electrónico</label>
+              <input type="email" className="form-control" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} required />
+            </div>
+            <div className="form-group" style={{ marginBottom: '24px' }}>
+              <label>Contraseña</label>
+              <input type="password" className="form-control" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '1rem' }}>Iniciar Sesión</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="layout">
       <aside className="sidebar">
@@ -213,6 +274,9 @@ function App() {
           <a className={`nav-item ${activeView === 'servicio' ? 'active' : ''}`} onClick={() => setActiveView('servicio')}>Otros Servicios</a>
           <a className={`nav-item ${activeView === 'cajachica' ? 'active' : ''}`} onClick={() => setActiveView('cajachica')}>Caja Chica</a>
         </nav>
+        <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
+          <button className="nav-item" style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--danger)', display: 'flex', justifyContent: 'flex-start', cursor: 'pointer' }} onClick={handleLogout}>🚪 Cerrar Sesión</button>
+        </div>
       </aside>
 
       <main className="main-content">
