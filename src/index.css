@@ -350,3 +350,58 @@ select.form-control option {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Responsive Design para Tablet y Celular */
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px;
+    z-index: 1;
+  }
+
+  .sidebar-logo {
+    margin-bottom: 16px;
+    font-size: 1.25rem;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Apilar los campos de los formularios en una sola columna */
+  form > div {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+}
