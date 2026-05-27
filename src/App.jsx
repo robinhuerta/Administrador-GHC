@@ -227,6 +227,16 @@ function App() {
               )
             })}
           </tbody>
+          <tfoot>
+            <tr style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold' }}>
+              <td colSpan="6" style={{ textAlign: 'right', paddingRight: '12px' }}>TOTALES FILTRADOS:</td>
+              <td style={{ color: 'var(--text-main)' }}>{formatCurrency(dataList.reduce((a,c) => a + (parseFloat(c.totalCost)||0), 0))}</td>
+              <td style={{ color: '#34d399' }}>{formatCurrency(dataList.reduce((a,c) => a + (parseFloat(c.paidAmount)||0), 0))}</td>
+              <td></td>
+              <td style={{ color: '#ef4444' }}>{formatCurrency(dataList.reduce((a,c) => a + ((parseFloat(c.totalCost)||0) - (parseFloat(c.paidAmount)||0)), 0))}</td>
+              <td></td>
+            </tr>
+          </tfoot>
         </table>
       )}
     </div>
@@ -385,6 +395,16 @@ function App() {
                       )
                     })}
                   </tbody>
+                  <tfoot>
+                    <tr style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold' }}>
+                      <td colSpan="5" style={{ textAlign: 'right', paddingRight: '12px' }}>TOTALES FILTRADOS:</td>
+                      <td style={{ color: 'var(--text-main)' }}>{formatCurrency(filteredVentas.reduce((a,c) => a + (parseFloat(c.totalValue)||0), 0))}</td>
+                      <td style={{ color: '#34d399' }}>{formatCurrency(filteredVentas.reduce((a,c) => a + (parseFloat(c.paidAmount)||0), 0))}</td>
+                      <td colSpan="2"></td>
+                      <td style={{ color: '#ef4444' }}>{formatCurrency(filteredVentas.reduce((a,c) => a + ((parseFloat(c.totalValue)||0) - (parseFloat(c.paidAmount)||0)), 0))}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
                 </table>
               )}
             </div>
@@ -419,6 +439,15 @@ function App() {
                       </tr>
                     )})}
                   </tbody>
+                  <tfoot>
+                    <tr style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold' }}>
+                      <td colSpan="4" style={{ textAlign: 'right', paddingRight: '12px' }}>TOTALES FILTRADOS:</td>
+                      <td style={{ color: 'var(--text-main)' }}>{formatCurrency(filteredPlanilla.reduce((a,c) => a + (parseFloat(c.total)||0), 0))}</td>
+                      <td style={{ color: '#34d399' }}>{formatCurrency(filteredPlanilla.reduce((a,c) => a + (parseFloat(c.paidAmount)||0), 0))}</td>
+                      <td style={{ color: '#ef4444' }}>{formatCurrency(filteredPlanilla.reduce((a,c) => a + ((parseFloat(c.total)||0) - (parseFloat(c.paidAmount)||0)), 0))}</td>
+                      <td colSpan="2"></td>
+                    </tr>
+                  </tfoot>
                 </table>
               )}
             </div>
@@ -457,6 +486,15 @@ function App() {
                       </tr>
                     )})}
                   </tbody>
+                  <tfoot>
+                    <tr style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold' }}>
+                      <td colSpan="2" style={{ textAlign: 'right', paddingRight: '12px' }}>TOTALES FILTRADOS:</td>
+                      <td style={{ color: 'var(--text-main)' }}>{formatCurrency(filteredSunat.reduce((a,c) => a + (parseFloat(c.total)||0), 0))}</td>
+                      <td style={{ color: '#34d399' }}>{formatCurrency(filteredSunat.reduce((a,c) => a + (parseFloat(c.paidAmount)||0), 0))}</td>
+                      <td style={{ color: '#ef4444' }}>{formatCurrency(filteredSunat.reduce((a,c) => a + ((parseFloat(c.total)||0) - (parseFloat(c.paidAmount)||0)), 0))}</td>
+                      <td colSpan="2"></td>
+                    </tr>
+                  </tfoot>
                 </table>
               )}
             </div>
@@ -490,6 +528,15 @@ function App() {
                       </tr>
                     )})}
                   </tbody>
+                  <tfoot>
+                    <tr style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold' }}>
+                      <td colSpan="3" style={{ textAlign: 'right', paddingRight: '12px' }}>TOTALES FILTRADOS:</td>
+                      <td style={{ color: 'var(--text-main)' }}>{formatCurrency(filteredInsumos.reduce((a,c) => a + (parseFloat(c.totalCost)||0), 0))}</td>
+                      <td style={{ color: '#34d399' }}>{formatCurrency(filteredInsumos.reduce((a,c) => a + (parseFloat(c.paidAmount)||0), 0))}</td>
+                      <td style={{ color: '#ef4444' }}>{formatCurrency(filteredInsumos.reduce((a,c) => a + ((parseFloat(c.totalCost)||0) - (parseFloat(c.paidAmount)||0)), 0))}</td>
+                      <td colSpan="2"></td>
+                    </tr>
+                  </tfoot>
                 </table>
               )}
             </div>
@@ -530,6 +577,14 @@ function App() {
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot>
+                    <tr style={{ background: 'rgba(0,0,0,0.2)', fontWeight: 'bold' }}>
+                      <td colSpan="2" style={{ textAlign: 'right', paddingRight: '12px' }}>TOTALES FILTRADOS:</td>
+                      <td style={{ color: '#34d399', textAlign: 'right' }}>{formatCurrency(filteredCajaChica.reduce((a,c) => c.type === 'Ingreso' ? a + (parseFloat(c.amount)||0) : a, 0))}</td>
+                      <td style={{ color: '#ef4444', textAlign: 'right' }}>{formatCurrency(filteredCajaChica.reduce((a,c) => c.type === 'Egreso' ? a + (parseFloat(c.amount)||0) : a, 0))}</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
                 </table>
               )}
             </div>
