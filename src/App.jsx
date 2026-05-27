@@ -18,6 +18,10 @@ function App() {
   const [isModalVentasOpen, setIsModalVentasOpen] = useState(false);
   const [formVenta, setFormVenta] = useState({ date: '', code: '', client: '', model: '', responsible: '', quantity: '', price: '', paidAmount: '', paymentType: 'EFECTIVO', bank: '', paymentDate: '' });
 
+  // --- FILTERS ---
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+
   const [isModalPlanillaOpen, setIsModalPlanillaOpen] = useState(false);
   const [formPlanilla, setFormPlanilla] = useState({ name: '', periodFrom: '', periodTo: '', hours: '', total: '', paidAmount: '', paymentDate: '' });
 
@@ -109,11 +113,33 @@ function App() {
   };
   const handleDeleteCajaChica = (id) => deleteCajaChica(id);
 
+  // --- FILTERS LOGIC ---
+  const applyFilters = (item) => {
+    const query = searchQuery.toLowerCase();
+    const matchSearch = !query || 
+      (item.provider && item.provider.toLowerCase().includes(query)) ||
+      (item.name && item.name.toLowerCase().includes(query)) ||
+      (item.client && item.client.toLowerCase().includes(query)) ||
+      (item.code && item.code.toLowerCase().includes(query)) ||
+      (item.style && item.style.toLowerCase().includes(query)) ||
+      (item.description && item.description.toLowerCase().includes(query));
+      
+    const matchDate = !dateFilter || item.date === dateFilter || item.paymentDate === dateFilter || item.periodFrom === dateFilter;
+
+    return matchSearch && matchDate;
+  };
+
+  const filteredVentas = ventas.filter(applyFilters);
+  const filteredPlanilla = planilla.filter(applyFilters);
+  const filteredSunat = sunat.filter(applyFilters);
+  const filteredInsumos = insumos.filter(applyFilters);
+  const filteredCajaChica = cajaChica.filter(applyFilters);
+
   // --- RENDER HELPERS ---
-  const lotesCorte = lotesTalleres.filter(t => t.type === 'Corte');
-  const lotesCostura = lotesTalleres.filter(t => t.type === 'Costura');
-  const lotesBordado = lotesTalleres.filter(t => t.type === 'Bordado');
-  const lotesServicio = lotesTalleres.filter(t => t.type === 'Servicio');
+  const lotesCorte = lotesTalleres.filter(t => t.type === 'Corte').filter(applyFilters);
+  const lotesCostura = lotesTalleres.filter(t => t.type === 'Costura').filter(applyFilters);
+  const lotesBordado = lotesTalleres.filter(t => t.type === 'Bordado').filter(applyFilters);
+  const lotesServicio = lotesTalleres.filter(t => t.type === 'Servicio').filter(applyFilters);
 
   const renderTalleresTable = (dataList) => (
     <div className="glass-panel table-container">
@@ -160,6 +186,17 @@ function App() {
       </aside>
 
       <main className="main-content">
+        {activeView !== 'dashboard' && (
+          <div className="glass-panel fade-in" style={{ display: 'flex', gap: '16px', marginBottom: '24px', padding: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>🔍 Filtros:</span>
+            <input type="text" className="form-control" style={{ flex: 1, minWidth: '200px' }} placeholder="Buscar por persona, taller, código o lote..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+            <input type="date" className="form-control" style={{ width: 'auto' }} value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
+            {(searchQuery || dateFilter) && (
+              <button className="btn btn-danger" style={{ padding: '10px 16px' }} onClick={() => { setSearchQuery(''); setDateFilter(''); }}>Limpiar</button>
+            )}
+          </div>
+        )}
+
         {/* CAJA GENERAL */}
         {activeView === 'dashboard' && (
           <div className="fade-in">
@@ -211,11 +248,11 @@ function App() {
               <button className="btn btn-primary" onClick={() => setIsModalVentasOpen(true)}>Registrar Entrega / Cobro</button>
             </header>
             <div className="glass-panel table-container">
-              {ventas.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros.</p> : (
+              {filteredVentas.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
                 <table style={{ fontSize: '0.85rem' }}>
                   <thead><tr><th>Fecha Entrega</th><th>Cód. / Modelo</th><th>Resp.</th><th>Cant.</th><th>Precio</th><th>Valor Total</th><th>A Cuenta</th><th>Tipo Pago</th><th>Cliente</th><th>Saldo</th><th style={{ textAlign: 'center' }}>Acción</th></tr></thead>
                   <tbody>
-                    {ventas.map((v) => {
+                    {filteredVentas.map((v) => {
                       const saldo = v.totalValue - v.paidAmount;
                       return (
                         <tr key={v.id}>
@@ -240,11 +277,11 @@ function App() {
               <button className="btn btn-primary" onClick={() => setIsModalPlanillaOpen(true)}>Registrar Planilla</button>
             </header>
             <div className="glass-panel table-container">
-              {planilla.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros.</p> : (
+              {filteredPlanilla.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
                 <table style={{ fontSize: '0.85rem' }}>
                   <thead><tr><th>Nombre</th><th>Desde</th><th>Hasta</th><th>Horas</th><th>Total Ganado</th><th>Pagado / Adelanto</th><th>Saldo</th><th>Fecha Pago</th><th style={{ textAlign: 'center' }}>Acción</th></tr></thead>
                   <tbody>
-                    {planilla.map((p) => {
+                    {filteredPlanilla.map((p) => {
                       const saldo = p.total - p.paidAmount;
                       return (
                       <tr key={p.id}>
@@ -267,11 +304,11 @@ function App() {
               <button className="btn btn-primary" onClick={() => setIsModalSunatOpen(true)}>Registrar Impuesto / Honorario</button>
             </header>
             <div className="glass-panel table-container">
-              {sunat.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros.</p> : (
+              {filteredSunat.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
                 <table style={{ fontSize: '0.85rem' }}>
                   <thead><tr><th>Fecha</th><th>Descripción / Concepto</th><th>Deuda Total</th><th>Pagado / Adelanto</th><th>Saldo</th><th>Fecha de Pago</th><th style={{ textAlign: 'center' }}>Acción</th></tr></thead>
                   <tbody>
-                    {sunat.map((s) => {
+                    {filteredSunat.map((s) => {
                       const saldo = s.total - s.paidAmount;
                       return (
                       <tr key={s.id}>
@@ -299,11 +336,11 @@ function App() {
               <button className="btn btn-primary" onClick={() => setIsModalInsumosOpen(true)}>Registrar Compra / Pago</button>
             </header>
             <div className="glass-panel table-container">
-              {insumos.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros.</p> : (
+              {filteredInsumos.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
                 <table>
                   <thead><tr><th>Fecha Compra</th><th>Proveedor / Nombre</th><th>Descripción / Factura</th><th>Total Deuda</th><th>Adelanto / Pagado</th><th>Saldo</th><th>Fecha de Pago</th><th style={{ textAlign: 'center' }}>Acción</th></tr></thead>
                   <tbody>
-                    {insumos.map((i) => {
+                    {filteredInsumos.map((i) => {
                       const saldo = i.totalCost - i.paidAmount;
                       return (
                       <tr key={i.id}>
@@ -331,11 +368,11 @@ function App() {
              <button className="btn btn-primary" onClick={() => setIsModalCajaChicaOpen(true)}>Registrar Movimiento</button>
            </header>
            <div className="glass-panel table-container">
-              {cajaChica.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros.</p> : (
+              {filteredCajaChica.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
                 <table>
                   <thead><tr><th>Fecha</th><th>Descripción</th><th style={{ textAlign: 'right' }}>Ingreso (S/.)</th><th style={{ textAlign: 'right' }}>Egreso (S/.)</th><th style={{ textAlign: 'center' }}>Acción</th></tr></thead>
                   <tbody>
-                    {cajaChica.map((c) => (
+                    {filteredCajaChica.map((c) => (
                       <tr key={c.id}>
                         <td style={{ color: 'var(--text-muted)' }}>{c.date}</td>
                         <td style={{ fontWeight: 500 }}>{c.description}</td>
