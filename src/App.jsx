@@ -44,6 +44,13 @@ function App() {
 
   const totalEgresos = totalPagadoPlanilla + totalPagadoSunat + totalPagadoTalleres + totalPagadoInsumos + egresosCajaChica;
 
+  // Calculos de Deudas (Por Cobrar y Por Pagar)
+  const saldoPorCobrarClientes = ventas.reduce((acc, curr) => acc + ((parseFloat(curr.totalValue) || 0) - (parseFloat(curr.paidAmount) || 0)), 0);
+  const deudaTalleres = lotesTalleres.reduce((acc, curr) => acc + ((parseFloat(curr.totalCost) || 0) - (parseFloat(curr.paidAmount) || 0)), 0);
+  const deudaPlanilla = planilla.reduce((acc, curr) => acc + ((parseFloat(curr.total) || 0) - (parseFloat(curr.paidAmount) || 0)), 0);
+  const deudaSunat = sunat.reduce((acc, curr) => acc + ((parseFloat(curr.total) || 0) - (parseFloat(curr.paidAmount) || 0)), 0);
+  const deudaInsumos = insumos.reduce((acc, curr) => acc + ((parseFloat(curr.totalCost) || 0) - (parseFloat(curr.paidAmount) || 0)), 0);
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
   };
@@ -160,12 +167,38 @@ function App() {
             <div className="stats-grid">
               <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #34d399' }}><span className="text-muted">Total Cobrado (Ingresos)</span><span className="stat-value" style={{ color: '#34d399' }}>{formatCurrency(totalIngresos)}</span></div>
               <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #ef4444' }}><span className="text-muted">Egresos Totales</span><span className="stat-value" style={{ color: '#ef4444' }}>{formatCurrency(totalEgresos)}</span></div>
-              <div className="glass-panel stat-card" style={{ borderLeft: '4px solid var(--accent)' }}><span className="text-muted">Saldo en Caja</span><span className="stat-value">{formatCurrency(totalIngresos - totalEgresos)}</span></div>
+              <div className="glass-panel stat-card" style={{ borderLeft: '4px solid var(--accent)' }}><span className="text-muted">Saldo Neto en Caja</span><span className="stat-value">{formatCurrency(totalIngresos - totalEgresos)}</span></div>
             </div>
             <div className="stats-grid" style={{ marginTop: '20px' }}>
                <div className="glass-panel stat-card"><span className="text-muted">Egresos: Personal</span><span style={{ fontSize: '1.2rem', fontWeight: 600 }}>{formatCurrency(totalPagadoPlanilla)}</span></div>
                <div className="glass-panel stat-card"><span className="text-muted">Egresos: SUNAT/Contador</span><span style={{ fontSize: '1.2rem', fontWeight: 600 }}>{formatCurrency(totalPagadoSunat)}</span></div>
                <div className="glass-panel stat-card"><span className="text-muted">Egresos: Producción (Talleres)</span><span style={{ fontSize: '1.2rem', fontWeight: 600 }}>{formatCurrency(totalPagadoTalleres)}</span></div>
+            </div>
+
+            <h2 style={{ marginTop: '40px', marginBottom: '20px', fontSize: '1.25rem', color: 'var(--text-main)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+              Estado de Deudas (Cuentas por Cobrar y Pagar)
+            </h2>
+            <div className="stats-grid">
+              <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #3b82f6', background: 'rgba(59, 130, 246, 0.05)' }}>
+                <span className="text-muted">Por Cobrar a Clientes</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#3b82f6' }}>{formatCurrency(saldoPorCobrarClientes)}</span>
+              </div>
+              <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245, 158, 11, 0.05)' }}>
+                <span className="text-muted">Deuda a Talleres</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f59e0b' }}>{formatCurrency(deudaTalleres)}</span>
+              </div>
+              <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245, 158, 11, 0.05)' }}>
+                <span className="text-muted">Deuda a Personal (Planilla)</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f59e0b' }}>{formatCurrency(deudaPlanilla)}</span>
+              </div>
+              <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245, 158, 11, 0.05)' }}>
+                <span className="text-muted">Deuda por Insumos</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f59e0b' }}>{formatCurrency(deudaInsumos)}</span>
+              </div>
+              <div className="glass-panel stat-card" style={{ borderLeft: '4px solid #f59e0b', background: 'rgba(245, 158, 11, 0.05)' }}>
+                <span className="text-muted">Deuda a SUNAT/Contador</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 600, color: '#f59e0b' }}>{formatCurrency(deudaSunat)}</span>
+              </div>
             </div>
           </div>
         )}
