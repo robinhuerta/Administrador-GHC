@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, addDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, deleteDoc, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export const useFirestoreCollection = (collectionName) => {
@@ -41,5 +41,13 @@ export const useFirestoreCollection = (collectionName) => {
     }
   };
 
-  return [docs, addDocument, deleteDocument];
+  const updateDocument = async (id, data) => {
+    try {
+      await updateDoc(doc(db, collectionName, id), data);
+    } catch (e) {
+      console.error("Error al actualizar: ", e);
+    }
+  };
+
+  return [docs, addDocument, deleteDocument, updateDocument];
 };

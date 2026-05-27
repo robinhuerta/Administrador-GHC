@@ -5,22 +5,19 @@ import './index.css';
 
 function App() {
   const [activeView, setActiveView] = useState('dashboard'); 
+  const [editingId, setEditingId] = useState(null);
   
   // --- STATES (Firebase Firestore) ---
-  const [ventas, addVenta, deleteVenta] = useFirestoreCollection('ghc_ventas');
-  const [planilla, addPlanilla, deletePlanilla] = useFirestoreCollection('ghc_planilla');
-  const [sunat, addSunat, deleteSunat] = useFirestoreCollection('ghc_sunat');
-  const [lotesTalleres, addTaller, deleteTaller] = useFirestoreCollection('ghc_lotes_talleres');
-  const [insumos, addInsumo, deleteInsumo] = useFirestoreCollection('ghc_insumos');
-  const [cajaChica, addCajaChica, deleteCajaChica] = useFirestoreCollection('ghc_cajachica');
+  const [ventas, addVenta, deleteVenta, updateVenta] = useFirestoreCollection('ghc_ventas');
+  const [planilla, addPlanilla, deletePlanilla, updatePlanilla] = useFirestoreCollection('ghc_planilla');
+  const [sunat, addSunat, deleteSunat, updateSunat] = useFirestoreCollection('ghc_sunat');
+  const [lotesTalleres, addTaller, deleteTaller, updateTaller] = useFirestoreCollection('ghc_lotes_talleres');
+  const [insumos, addInsumo, deleteInsumo, updateInsumo] = useFirestoreCollection('ghc_insumos');
+  const [cajaChica, addCajaChica, deleteCajaChica, updateCajaChica] = useFirestoreCollection('ghc_cajachica');
 
   // --- MODAL STATES ---
   const [isModalVentasOpen, setIsModalVentasOpen] = useState(false);
   const [formVenta, setFormVenta] = useState({ date: '', code: '', client: '', model: '', responsible: '', quantity: '', price: '', paidAmount: '', paymentType: 'EFECTIVO', bank: '', paymentDate: '' });
-
-  // --- FILTERS ---
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('');
 
   const [isModalPlanillaOpen, setIsModalPlanillaOpen] = useState(false);
   const [formPlanilla, setFormPlanilla] = useState({ name: '', periodFrom: '', periodTo: '', hours: '', total: '', paidAmount: '', paymentDate: '' });
@@ -38,6 +35,10 @@ function App() {
   const [isModalCajaChicaOpen, setIsModalCajaChicaOpen] = useState(false);
   const [formCajaChica, setFormCajaChica] = useState({ date: '', description: '', type: 'Egreso', amount: '' });
 
+  // --- FILTERS ---
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+
   // --- CALCULATIONS ---
   const totalIngresos = ventas.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
   const totalPagadoTalleres = lotesTalleres.reduce((acc, curr) => acc + (parseFloat(curr.paidAmount) || 0), 0);
@@ -48,7 +49,6 @@ function App() {
 
   const totalEgresos = totalPagadoPlanilla + totalPagadoSunat + totalPagadoTalleres + totalPagadoInsumos + egresosCajaChica;
 
-  // Calculos de Deudas (Por Cobrar y Por Pagar)
   const saldoPorCobrarClientes = ventas.reduce((acc, curr) => acc + ((parseFloat(curr.totalValue) || 0) - (parseFloat(curr.paidAmount) || 0)), 0);
   const deudaTalleres = lotesTalleres.reduce((acc, curr) => acc + ((parseFloat(curr.totalCost) || 0) - (parseFloat(curr.paidAmount) || 0)), 0);
   const deudaPlanilla = planilla.reduce((acc, curr) => acc + ((parseFloat(curr.total) || 0) - (parseFloat(curr.paidAmount) || 0)), 0);
@@ -59,59 +59,20 @@ function App() {
     return new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
   };
 
-  // --- HANDLERS ---
-  const handleAddVenta = (e) => { 
-    e.preventDefault(); 
-    const qty = parseFloat(formVenta.quantity) || 0; 
-    const price = parseFloat(formVenta.price) || 0; 
-    addVenta({ date: formVenta.date, code: formVenta.code, client: formVenta.client, model: formVenta.model, responsible: formVenta.responsible, quantity: qty, price: price, totalValue: qty * price, paidAmount: parseFloat(formVenta.paidAmount) || 0, paymentType: formVenta.paymentType, bank: formVenta.bank || '-', paymentDate: formVenta.paymentDate }); 
-    setIsModalVentasOpen(false); 
-    setFormVenta({ date: '', code: '', client: '', model: '', responsible: '', quantity: '', price: '', paidAmount: '', paymentType: 'EFECTIVO', bank: '', paymentDate: '' }); 
+  const exportToCSV = (data, filename) => {
+    if (data.length === 0) return alert('No hay datos para exportar.');
+    const keys = Object.keys(data[0]).filter(k => k !== 'id' && k !== 'createdAt');
+    const csvContent = [
+      keys.join(','),
+      ...data.map(row => keys.map(k => `"${row[k] !== undefined ? row[k] : ''}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename + ".csv";
+    link.click();
   };
-  const handleDeleteVenta = (id) => deleteVenta(id);
-
-  const handleAddPlanilla = (e) => { 
-    e.preventDefault(); 
-    addPlanilla({ name: formPlanilla.name, periodFrom: formPlanilla.periodFrom, periodTo: formPlanilla.periodTo, hours: parseFloat(formPlanilla.hours) || 0, total: parseFloat(formPlanilla.total) || 0, paidAmount: parseFloat(formPlanilla.paidAmount) || 0, paymentDate: formPlanilla.paymentDate }); 
-    setIsModalPlanillaOpen(false); 
-    setFormPlanilla({ name: '', periodFrom: '', periodTo: '', hours: '', total: '', paidAmount: '', paymentDate: '' }); 
-  };
-  const handleDeletePlanilla = (id) => deletePlanilla(id);
-
-  const handleAddSunat = (e) => { 
-    e.preventDefault(); 
-    addSunat({ date: formSunat.date, description: formSunat.description, total: parseFloat(formSunat.total) || 0, paidAmount: parseFloat(formSunat.paidAmount) || 0, paymentDate: formSunat.paymentDate }); 
-    setIsModalSunatOpen(false); 
-    setFormSunat({ date: '', description: '', total: '', paidAmount: '', paymentDate: '' }); 
-  };
-  const handleDeleteSunat = (id) => deleteSunat(id);
-
-  const handleAddInsumo = (e) => { 
-    e.preventDefault(); 
-    addInsumo({ date: formInsumo.date, provider: formInsumo.provider, invoice: formInsumo.invoice, totalCost: parseFloat(formInsumo.totalCost) || 0, paidAmount: parseFloat(formInsumo.paidAmount) || 0, paymentDate: formInsumo.paymentDate }); 
-    setIsModalInsumosOpen(false); 
-    setFormInsumo({ date: '', provider: '', invoice: '', totalCost: '', paidAmount: '', paymentDate: '' }); 
-  };
-  const handleDeleteInsumo = (id) => deleteInsumo(id);
-
-  const openTallerModal = (type) => { setFormTallerType(type); setIsModalTallerOpen(true); };
-  const handleAddTaller = (e) => { 
-    e.preventDefault(); 
-    const qty = parseFloat(formTaller.quantity) || 0; 
-    const price = parseFloat(formTaller.unitPrice) || 0; 
-    addTaller({ type: formTallerType, date: formTaller.date, code: formTaller.code, style: formTaller.style, quantity: qty, provider: formTaller.provider, unitPrice: price, totalCost: qty * price, paidAmount: parseFloat(formTaller.paidAmount) || 0, paymentDate: formTaller.paymentDate }); 
-    setIsModalTallerOpen(false); 
-    setFormTaller({ style: '', date: '', code: '', quantity: '', provider: '', unitPrice: '', paidAmount: '', paymentDate: '' }); 
-  };
-  const handleDeleteTaller = (id) => deleteTaller(id);
-
-  const handleAddCajaChica = (e) => { 
-    e.preventDefault(); 
-    addCajaChica({ date: formCajaChica.date, description: formCajaChica.description, type: formCajaChica.type, amount: parseFloat(formCajaChica.amount) }); 
-    setIsModalCajaChicaOpen(false); 
-    setFormCajaChica({ date: '', description: '', type: 'Egreso', amount: '' }); 
-  };
-  const handleDeleteCajaChica = (id) => deleteCajaChica(id);
 
   // --- FILTERS LOGIC ---
   const applyFilters = (item) => {
@@ -135,12 +96,78 @@ function App() {
   const filteredInsumos = insumos.filter(applyFilters);
   const filteredCajaChica = cajaChica.filter(applyFilters);
 
-  // --- RENDER HELPERS ---
   const lotesCorte = lotesTalleres.filter(t => t.type === 'Corte').filter(applyFilters);
   const lotesCostura = lotesTalleres.filter(t => t.type === 'Costura').filter(applyFilters);
   const lotesBordado = lotesTalleres.filter(t => t.type === 'Bordado').filter(applyFilters);
   const lotesServicio = lotesTalleres.filter(t => t.type === 'Servicio').filter(applyFilters);
 
+  // --- HANDLERS (Add/Edit) ---
+  const handleEdit = (item, setForm, setModal) => {
+    setEditingId(item.id);
+    setForm(item);
+    setModal(true);
+  };
+
+  const handleAddVenta = (e) => { 
+    e.preventDefault(); 
+    const qty = parseFloat(formVenta.quantity) || 0; 
+    const price = parseFloat(formVenta.price) || 0; 
+    const data = { date: formVenta.date, code: formVenta.code, client: formVenta.client, model: formVenta.model, responsible: formVenta.responsible, quantity: qty, price: price, totalValue: qty * price, paidAmount: parseFloat(formVenta.paidAmount) || 0, paymentType: formVenta.paymentType, bank: formVenta.bank || '-', paymentDate: formVenta.paymentDate };
+    if (editingId) updateVenta(editingId, data); else addVenta(data);
+    setIsModalVentasOpen(false); setEditingId(null);
+    setFormVenta({ date: '', code: '', client: '', model: '', responsible: '', quantity: '', price: '', paidAmount: '', paymentType: 'EFECTIVO', bank: '', paymentDate: '' }); 
+  };
+  const handleDeleteVenta = (id) => deleteVenta(id);
+
+  const handleAddPlanilla = (e) => { 
+    e.preventDefault(); 
+    const data = { name: formPlanilla.name, periodFrom: formPlanilla.periodFrom, periodTo: formPlanilla.periodTo, hours: parseFloat(formPlanilla.hours) || 0, total: parseFloat(formPlanilla.total) || 0, paidAmount: parseFloat(formPlanilla.paidAmount) || 0, paymentDate: formPlanilla.paymentDate };
+    if (editingId) updatePlanilla(editingId, data); else addPlanilla(data);
+    setIsModalPlanillaOpen(false); setEditingId(null);
+    setFormPlanilla({ name: '', periodFrom: '', periodTo: '', hours: '', total: '', paidAmount: '', paymentDate: '' }); 
+  };
+  const handleDeletePlanilla = (id) => deletePlanilla(id);
+
+  const handleAddSunat = (e) => { 
+    e.preventDefault(); 
+    const data = { date: formSunat.date, description: formSunat.description, total: parseFloat(formSunat.total) || 0, paidAmount: parseFloat(formSunat.paidAmount) || 0, paymentDate: formSunat.paymentDate };
+    if (editingId) updateSunat(editingId, data); else addSunat(data);
+    setIsModalSunatOpen(false); setEditingId(null);
+    setFormSunat({ date: '', description: '', total: '', paidAmount: '', paymentDate: '' }); 
+  };
+  const handleDeleteSunat = (id) => deleteSunat(id);
+
+  const handleAddInsumo = (e) => { 
+    e.preventDefault(); 
+    const data = { date: formInsumo.date, provider: formInsumo.provider, invoice: formInsumo.invoice, totalCost: parseFloat(formInsumo.totalCost) || 0, paidAmount: parseFloat(formInsumo.paidAmount) || 0, paymentDate: formInsumo.paymentDate };
+    if (editingId) updateInsumo(editingId, data); else addInsumo(data);
+    setIsModalInsumosOpen(false); setEditingId(null);
+    setFormInsumo({ date: '', provider: '', invoice: '', totalCost: '', paidAmount: '', paymentDate: '' }); 
+  };
+  const handleDeleteInsumo = (id) => deleteInsumo(id);
+
+  const openTallerModal = (type) => { setEditingId(null); setFormTallerType(type); setIsModalTallerOpen(true); };
+  const handleAddTaller = (e) => { 
+    e.preventDefault(); 
+    const qty = parseFloat(formTaller.quantity) || 0; 
+    const price = parseFloat(formTaller.unitPrice) || 0; 
+    const data = { type: formTallerType, date: formTaller.date, code: formTaller.code, style: formTaller.style, quantity: qty, provider: formTaller.provider, unitPrice: price, totalCost: qty * price, paidAmount: parseFloat(formTaller.paidAmount) || 0, paymentDate: formTaller.paymentDate };
+    if (editingId) updateTaller(editingId, data); else addTaller(data);
+    setIsModalTallerOpen(false); setEditingId(null);
+    setFormTaller({ style: '', date: '', code: '', quantity: '', provider: '', unitPrice: '', paidAmount: '', paymentDate: '' }); 
+  };
+  const handleDeleteTaller = (id) => deleteTaller(id);
+
+  const handleAddCajaChica = (e) => { 
+    e.preventDefault(); 
+    const data = { date: formCajaChica.date, description: formCajaChica.description, type: formCajaChica.type, amount: parseFloat(formCajaChica.amount) };
+    if (editingId) updateCajaChica(editingId, data); else addCajaChica(data);
+    setIsModalCajaChicaOpen(false); setEditingId(null);
+    setFormCajaChica({ date: '', description: '', type: 'Egreso', amount: '' }); 
+  };
+  const handleDeleteCajaChica = (id) => deleteCajaChica(id);
+
+  // --- RENDER HELPERS ---
   const renderTalleresTable = (dataList) => (
     <div className="glass-panel table-container">
       {dataList.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros.</p> : (
@@ -153,7 +180,10 @@ function App() {
                 <tr key={t.id}>
                   <td style={{ fontWeight: 500, color: 'var(--accent)' }}>{t.style}</td><td style={{ color: 'var(--text-muted)' }}>{t.date}</td><td style={{ fontWeight: 600 }}>{t.code}</td><td>{t.quantity}</td><td style={{ fontWeight: 600, color: '#60a5fa' }}>{t.provider}</td><td>{formatCurrency(t.unitPrice)}</td><td style={{ fontWeight: 600 }}>{formatCurrency(t.totalCost)}</td><td style={{ color: '#34d399', fontWeight: 600 }}>{formatCurrency(t.paidAmount)}</td><td style={{ color: 'var(--text-muted)' }}>{t.paymentDate || '-'}</td>
                   <td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : (saldo > 0 ? formatCurrency(saldo) : `-${formatCurrency(Math.abs(saldo))}`)}</span></td>
-                  <td style={{ textAlign: 'center' }}><button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteTaller(t.id)}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>
+                  <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                    <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(t, setFormTaller, setIsModalTallerOpen)}>✎</button>
+                    <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteTaller(t.id)}>🗑</button>
+                  </td>
                 </tr>
               )
             })}
@@ -169,19 +199,19 @@ function App() {
         <div className="sidebar-logo"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>GHC <span>Gorras</span></div>
         <div style={{ padding: '0 16px', marginBottom: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Principal</div>
         <nav className="nav-menu" style={{ marginBottom: '24px' }}>
-          <a className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Caja General</a>
-          <a className={`nav-item ${activeView === 'ventas' ? 'active' : ''}`} onClick={() => setActiveView('ventas')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Cobros a Clientes</a>
+          <a className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}>Caja General</a>
+          <a className={`nav-item ${activeView === 'ventas' ? 'active' : ''}`} onClick={() => setActiveView('ventas')}>Cobros a Clientes</a>
         </nav>
         <div style={{ padding: '0 16px', marginBottom: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Egresos y Pagos</div>
         <nav className="nav-menu">
-          <a className={`nav-item ${activeView === 'planilla' ? 'active' : ''}`} onClick={() => setActiveView('planilla')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Planilla de Personal</a>
-          <a className={`nav-item ${activeView === 'sunat' ? 'active' : ''}`} onClick={() => setActiveView('sunat')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Contador y SUNAT</a>
-          <a className={`nav-item ${activeView === 'insumos' ? 'active' : ''}`} onClick={() => setActiveView('insumos')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg> Compras / Créditos</a>
-          <a className={`nav-item ${activeView === 'corte' ? 'active' : ''}`} onClick={() => setActiveView('corte')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6zM4 4h6v6H4z"></path></svg> Producción: Corte</a>
-          <a className={`nav-item ${activeView === 'costura' ? 'active' : ''}`} onClick={() => setActiveView('costura')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg> Producción: Costura</a>
-          <a className={`nav-item ${activeView === 'bordado' ? 'active' : ''}`} onClick={() => setActiveView('bordado')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="6.5"></line></svg> Producción: Bordados</a>
-          <a className={`nav-item ${activeView === 'servicio' ? 'active' : ''}`} onClick={() => setActiveView('servicio')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Otros Servicios</a>
-          <a className={`nav-item ${activeView === 'cajachica' ? 'active' : ''}`} onClick={() => setActiveView('cajachica')}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg> Caja Chica</a>
+          <a className={`nav-item ${activeView === 'planilla' ? 'active' : ''}`} onClick={() => setActiveView('planilla')}>Planilla de Personal</a>
+          <a className={`nav-item ${activeView === 'sunat' ? 'active' : ''}`} onClick={() => setActiveView('sunat')}>Contador y SUNAT</a>
+          <a className={`nav-item ${activeView === 'insumos' ? 'active' : ''}`} onClick={() => setActiveView('insumos')}>Compras / Créditos</a>
+          <a className={`nav-item ${activeView === 'corte' ? 'active' : ''}`} onClick={() => setActiveView('corte')}>Producción: Corte</a>
+          <a className={`nav-item ${activeView === 'costura' ? 'active' : ''}`} onClick={() => setActiveView('costura')}>Producción: Costura</a>
+          <a className={`nav-item ${activeView === 'bordado' ? 'active' : ''}`} onClick={() => setActiveView('bordado')}>Producción: Bordados</a>
+          <a className={`nav-item ${activeView === 'servicio' ? 'active' : ''}`} onClick={() => setActiveView('servicio')}>Otros Servicios</a>
+          <a className={`nav-item ${activeView === 'cajachica' ? 'active' : ''}`} onClick={() => setActiveView('cajachica')}>Caja Chica</a>
         </nav>
       </aside>
 
@@ -245,7 +275,10 @@ function App() {
           <div className="fade-in">
              <header className="header">
               <div><h1>Entregas y Cobros a Clientes</h1><p className="text-muted">Control de mercadería entregada a clientes y sus pagos a cuenta.</p></div>
-              <button className="btn btn-primary" onClick={() => setIsModalVentasOpen(true)}>Registrar Entrega / Cobro</button>
+              <div style={{display:'flex', gap:'8px'}}>
+                <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(filteredVentas, 'Cobros')}>📊 Exportar Excel</button>
+                <button className="btn btn-primary" onClick={() => {setEditingId(null); setFormVenta({ date: '', code: '', client: '', model: '', responsible: '', quantity: '', price: '', paidAmount: '', paymentType: 'EFECTIVO', bank: '', paymentDate: '' }); setIsModalVentasOpen(true)}}>Registrar Entrega / Cobro</button>
+              </div>
             </header>
             <div className="glass-panel table-container">
               {filteredVentas.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
@@ -258,7 +291,11 @@ function App() {
                         <tr key={v.id}>
                           <td style={{ color: 'var(--text-muted)' }}>{v.date}</td>
                           <td style={{ fontWeight: 600 }}>{v.code} <br/><span style={{ color: 'var(--accent)', fontSize: '0.75rem' }}>{v.model}</span></td>
-                          <td>{v.responsible}</td><td>{v.quantity}</td><td>{formatCurrency(v.price)}</td><td style={{ fontWeight: 600 }}>{formatCurrency(v.totalValue)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(v.paidAmount)}</td><td><span className="badge badge-blue">{v.paymentType}</span><br/><span style={{ fontSize: '0.7rem' }}>{v.bank}</span></td><td style={{ fontWeight: 500 }}>{v.client}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td><td style={{ textAlign: 'center' }}><button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteVenta(v.id)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>
+                          <td>{v.responsible}</td><td>{v.quantity}</td><td>{formatCurrency(v.price)}</td><td style={{ fontWeight: 600 }}>{formatCurrency(v.totalValue)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(v.paidAmount)}</td><td><span className="badge badge-blue">{v.paymentType}</span><br/><span style={{ fontSize: '0.7rem' }}>{v.bank}</span></td><td style={{ fontWeight: 500 }}>{v.client}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td>
+                          <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(v, setFormVenta, setIsModalVentasOpen)}>✎</button>
+                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteVenta(v.id)}>🗑</button>
+                          </td>
                         </tr>
                       )
                     })}
@@ -274,7 +311,10 @@ function App() {
           <div className="fade-in">
              <header className="header">
               <div><h1>Planilla de Personal</h1><p className="text-muted">Control de horas trabajadas y pagos (Ej. Anngela).</p></div>
-              <button className="btn btn-primary" onClick={() => setIsModalPlanillaOpen(true)}>Registrar Planilla</button>
+              <div style={{display:'flex', gap:'8px'}}>
+                <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(filteredPlanilla, 'Planilla')}>📊 Exportar Excel</button>
+                <button className="btn btn-primary" onClick={() => {setEditingId(null); setFormPlanilla({ name: '', periodFrom: '', periodTo: '', hours: '', total: '', paidAmount: '', paymentDate: '' }); setIsModalPlanillaOpen(true)}}>Registrar Planilla</button>
+              </div>
             </header>
             <div className="glass-panel table-container">
               {filteredPlanilla.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
@@ -286,7 +326,11 @@ function App() {
                       return (
                       <tr key={p.id}>
                         <td style={{ fontWeight: 600 }}>{p.name}</td>
-                        <td style={{ color: 'var(--text-muted)' }}>{p.periodFrom || '-'}</td><td style={{ color: 'var(--text-muted)' }}>{p.periodTo || '-'}</td><td style={{ fontWeight: 500 }}>{p.hours ? p.hours : '-'}</td><td style={{ fontWeight: 600 }}>{formatCurrency(p.total)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.paidAmount)}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td><td style={{ color: 'var(--text-muted)' }}>{p.paymentDate || '-'}</td><td style={{ textAlign: 'center' }}><button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeletePlanilla(p.id)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>
+                        <td style={{ color: 'var(--text-muted)' }}>{p.periodFrom || '-'}</td><td style={{ color: 'var(--text-muted)' }}>{p.periodTo || '-'}</td><td style={{ fontWeight: 500 }}>{p.hours ? p.hours : '-'}</td><td style={{ fontWeight: 600 }}>{formatCurrency(p.total)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.paidAmount)}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td><td style={{ color: 'var(--text-muted)' }}>{p.paymentDate || '-'}</td>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(p, setFormPlanilla, setIsModalPlanillaOpen)}>✎</button>
+                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeletePlanilla(p.id)}>🗑</button>
+                        </td>
                       </tr>
                     )})}
                   </tbody>
@@ -301,7 +345,10 @@ function App() {
           <div className="fade-in">
              <header className="header">
               <div><h1>Contador y SUNAT</h1><p className="text-muted">Control de honorarios, impuestos y fraccionamientos.</p></div>
-              <button className="btn btn-primary" onClick={() => setIsModalSunatOpen(true)}>Registrar Impuesto / Honorario</button>
+              <div style={{display:'flex', gap:'8px'}}>
+                <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(filteredSunat, 'Sunat')}>📊 Exportar Excel</button>
+                <button className="btn btn-primary" onClick={() => {setEditingId(null); setFormSunat({ date: '', description: '', total: '', paidAmount: '', paymentDate: '' }); setIsModalSunatOpen(true)}}>Registrar Impuesto / Honorario</button>
+              </div>
             </header>
             <div className="glass-panel table-container">
               {filteredSunat.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
@@ -318,7 +365,10 @@ function App() {
                         <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(s.paidAmount)}</td>
                         <td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td>
                         <td style={{ color: 'var(--text-muted)' }}>{s.paymentDate || '-'}</td>
-                        <td style={{ textAlign: 'center' }}><button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteSunat(s.id)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(s, setFormSunat, setIsModalSunatOpen)}>✎</button>
+                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteSunat(s.id)}>🗑</button>
+                        </td>
                       </tr>
                     )})}
                   </tbody>
@@ -333,7 +383,10 @@ function App() {
           <div className="fade-in">
              <header className="header">
               <div><h1>Compras a Crédito (Insumos)</h1><p className="text-muted">Control de telas, avíos y deudas con proveedores (Ej. MASVAL).</p></div>
-              <button className="btn btn-primary" onClick={() => setIsModalInsumosOpen(true)}>Registrar Compra / Pago</button>
+              <div style={{display:'flex', gap:'8px'}}>
+                <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(filteredInsumos, 'Insumos')}>📊 Exportar Excel</button>
+                <button className="btn btn-primary" onClick={() => {setEditingId(null); setFormInsumo({ date: '', provider: '', invoice: '', totalCost: '', paidAmount: '', paymentDate: '' }); setIsModalInsumosOpen(true)}}>Registrar Compra / Pago</button>
+              </div>
             </header>
             <div className="glass-panel table-container">
               {filteredInsumos.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
@@ -344,7 +397,11 @@ function App() {
                       const saldo = i.totalCost - i.paidAmount;
                       return (
                       <tr key={i.id}>
-                        <td style={{ color: 'var(--text-muted)' }}>{i.date}</td><td style={{ fontWeight: 600 }}>{i.provider}</td><td style={{ fontWeight: 500 }}>{i.invoice}</td><td style={{ fontWeight: 600 }}>{formatCurrency(i.totalCost)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(i.paidAmount)}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td><td style={{ color: 'var(--text-muted)' }}>{i.paymentDate || '-'}</td><td style={{ textAlign: 'center' }}><button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteInsumo(i.id)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>
+                        <td style={{ color: 'var(--text-muted)' }}>{i.date}</td><td style={{ fontWeight: 600 }}>{i.provider}</td><td style={{ fontWeight: 500 }}>{i.invoice}</td><td style={{ fontWeight: 600 }}>{formatCurrency(i.totalCost)}</td><td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(i.paidAmount)}</td><td><span style={{ backgroundColor: saldo === 0 ? 'transparent' : 'rgba(239, 68, 68, 0.2)', color: saldo === 0 ? 'var(--text-muted)' : '#ef4444', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>{saldo === 0 ? 'S/. 0.00' : formatCurrency(saldo)}</span></td><td style={{ color: 'var(--text-muted)' }}>{i.paymentDate || '-'}</td>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(i, setFormInsumo, setIsModalInsumosOpen)}>✎</button>
+                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteInsumo(i.id)}>🗑</button>
+                        </td>
                       </tr>
                     )})}
                   </tbody>
@@ -355,17 +412,20 @@ function App() {
         )}
 
         {/* TALLERES & SERVICIOS */}
-        {activeView === 'corte' && (<div className="fade-in"><header className="header"><div><h1>Producción: Corte</h1><p className="text-muted">Control de lotes y saldo del cortador.</p></div><button className="btn btn-primary" onClick={() => openTallerModal('Corte')}>Registrar Lote de Corte</button></header>{renderTalleresTable(lotesCorte)}</div>)}
-        {activeView === 'costura' && (<div className="fade-in"><header className="header"><div><h1>Producción: Costura (Confección)</h1><p className="text-muted">Control de lotes entregados a talleres externos.</p></div><button className="btn btn-primary" onClick={() => openTallerModal('Costura')}>Registrar Lote de Costura</button></header>{renderTalleresTable(lotesCostura)}</div>)}
-        {activeView === 'bordado' && (<div className="fade-in"><header className="header"><div><h1>Producción: Bordados</h1><p className="text-muted">Control de lotes entregados a bordadores.</p></div><button className="btn btn-primary" onClick={() => openTallerModal('Bordado')}>Registrar Lote de Bordado</button></header>{renderTalleresTable(lotesBordado)}</div>)}
-        {activeView === 'servicio' && (<div className="fade-in"><header className="header"><div><h1>Otros Servicios</h1><p className="text-muted">Lavado, planchado u otros servicios externos.</p></div><button className="btn btn-primary" onClick={() => openTallerModal('Servicio')}>Registrar Servicio</button></header>{renderTalleresTable(lotesServicio)}</div>)}
+        {activeView === 'corte' && (<div className="fade-in"><header className="header"><div><h1>Producción: Corte</h1><p className="text-muted">Control de lotes y saldo del cortador.</p></div><div style={{display:'flex', gap:'8px'}}><button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(lotesCorte, 'Corte')}>📊 Exportar Excel</button><button className="btn btn-primary" onClick={() => openTallerModal('Corte')}>Registrar Lote de Corte</button></div></header>{renderTalleresTable(lotesCorte)}</div>)}
+        {activeView === 'costura' && (<div className="fade-in"><header className="header"><div><h1>Producción: Costura (Confección)</h1><p className="text-muted">Control de lotes entregados a talleres externos.</p></div><div style={{display:'flex', gap:'8px'}}><button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(lotesCostura, 'Costura')}>📊 Exportar Excel</button><button className="btn btn-primary" onClick={() => openTallerModal('Costura')}>Registrar Lote de Costura</button></div></header>{renderTalleresTable(lotesCostura)}</div>)}
+        {activeView === 'bordado' && (<div className="fade-in"><header className="header"><div><h1>Producción: Bordados</h1><p className="text-muted">Control de lotes entregados a bordadores.</p></div><div style={{display:'flex', gap:'8px'}}><button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(lotesBordado, 'Bordado')}>📊 Exportar Excel</button><button className="btn btn-primary" onClick={() => openTallerModal('Bordado')}>Registrar Lote de Bordado</button></div></header>{renderTalleresTable(lotesBordado)}</div>)}
+        {activeView === 'servicio' && (<div className="fade-in"><header className="header"><div><h1>Otros Servicios</h1><p className="text-muted">Lavado, planchado u otros servicios externos.</p></div><div style={{display:'flex', gap:'8px'}}><button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(lotesServicio, 'Servicios')}>📊 Exportar Excel</button><button className="btn btn-primary" onClick={() => openTallerModal('Servicio')}>Registrar Servicio</button></div></header>{renderTalleresTable(lotesServicio)}</div>)}
 
         {/* CAJA CHICA */}
         {activeView === 'cajachica' && (
            <div className="fade-in">
            <header className="header">
              <div><h1>Caja Chica</h1><p className="text-muted">Registro de ingresos y gastos diarios menores.</p></div>
-             <button className="btn btn-primary" onClick={() => setIsModalCajaChicaOpen(true)}>Registrar Movimiento</button>
+             <div style={{display:'flex', gap:'8px'}}>
+                <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(filteredCajaChica, 'CajaChica')}>📊 Exportar Excel</button>
+                <button className="btn btn-primary" onClick={() => {setEditingId(null); setFormCajaChica({ date: '', description: '', type: 'Egreso', amount: '' }); setIsModalCajaChicaOpen(true)}}>Registrar Movimiento</button>
+             </div>
            </header>
            <div className="glass-panel table-container">
               {filteredCajaChica.length === 0 ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p> : (
@@ -378,7 +438,10 @@ function App() {
                         <td style={{ fontWeight: 500 }}>{c.description}</td>
                         <td style={{ textAlign: 'right', fontWeight: 600, color: '#34d399' }}>{c.type === 'Ingreso' ? `+ ${formatCurrency(c.amount)}` : '-'}</td>
                         <td style={{ textAlign: 'right', fontWeight: 600, color: '#ef4444' }}>{c.type === 'Egreso' ? `- ${formatCurrency(c.amount)}` : '-'}</td>
-                        <td style={{ textAlign: 'center' }}><button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteCajaChica(c.id)}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                            <button className="btn-icon" style={{ color: '#60a5fa', marginRight: '4px' }} onClick={() => handleEdit(c, setFormCajaChica, setIsModalCajaChicaOpen)}>✎</button>
+                            <button className="btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteCajaChica(c.id)}>🗑</button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -392,7 +455,7 @@ function App() {
       {/* --- MODALS --- */}
       
       {/* 1. Modal Ventas */}
-      <Modal isOpen={isModalVentasOpen} onClose={() => setIsModalVentasOpen(false)} title="Registrar Entrega / Cobro">
+      <Modal isOpen={isModalVentasOpen} onClose={() => setIsModalVentasOpen(false)} title={editingId ? "Editar Entrega / Cobro" : "Registrar Entrega / Cobro"}>
         <form onSubmit={handleAddVenta}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div className="form-group"><label>Fecha de Entrega</label><input type="date" className="form-control" value={formVenta.date} onChange={e => setFormVenta({...formVenta, date: e.target.value})} required/></div>
@@ -431,12 +494,12 @@ function App() {
               </select>
             </div>
           </div>
-          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalVentasOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">Guardar Registro</button></div>
+          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalVentasOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">{editingId ? "Actualizar" : "Guardar"}</button></div>
         </form>
       </Modal>
 
       {/* 2. Modal Planilla Personal */}
-      <Modal isOpen={isModalPlanillaOpen} onClose={() => setIsModalPlanillaOpen(false)} title="Registrar Planilla (Personal)">
+      <Modal isOpen={isModalPlanillaOpen} onClose={() => setIsModalPlanillaOpen(false)} title={editingId ? "Editar Planilla" : "Registrar Planilla"}>
         <form onSubmit={handleAddPlanilla}>
           <div className="form-group"><label>Nombre del Trabajador</label><input type="text" className="form-control" placeholder="Ej. ANNGELA" value={formPlanilla.name} onChange={e => setFormPlanilla({...formPlanilla, name: e.target.value})} required/></div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
@@ -450,12 +513,12 @@ function App() {
             <div className="form-group"><label>Monto Pagado / Adelanto (S/.)</label><input type="number" step="0.10" className="form-control" value={formPlanilla.paidAmount} onChange={e => setFormPlanilla({...formPlanilla, paidAmount: e.target.value})} /></div>
             <div className="form-group"><label>Fecha de Pago</label><input type="date" className="form-control" value={formPlanilla.paymentDate} onChange={e => setFormPlanilla({...formPlanilla, paymentDate: e.target.value})} /></div>
           </div>
-          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalPlanillaOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">Guardar Registro</button></div>
+          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalPlanillaOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">{editingId ? "Actualizar" : "Guardar"}</button></div>
         </form>
       </Modal>
 
       {/* 2B. Modal SUNAT/Contador */}
-      <Modal isOpen={isModalSunatOpen} onClose={() => setIsModalSunatOpen(false)} title="Registrar SUNAT / Contador">
+      <Modal isOpen={isModalSunatOpen} onClose={() => setIsModalSunatOpen(false)} title={editingId ? "Editar SUNAT" : "Registrar SUNAT"}>
         <form onSubmit={handleAddSunat}>
           <div className="form-group"><label>Fecha</label><input type="date" className="form-control" value={formSunat.date} onChange={e => setFormSunat({...formSunat, date: e.target.value})} /></div>
           <div className="form-group"><label>Descripción / Concepto</label><input type="text" className="form-control" placeholder="Ej. HONORARIO ENERO" value={formSunat.description} onChange={e => setFormSunat({...formSunat, description: e.target.value})} required/></div>
@@ -465,12 +528,12 @@ function App() {
             <div className="form-group"><label>Monto Pagado (S/.)</label><input type="number" step="0.10" className="form-control" value={formSunat.paidAmount} onChange={e => setFormSunat({...formSunat, paidAmount: e.target.value})} /></div>
             <div className="form-group"><label>Fecha de Pago</label><input type="date" className="form-control" value={formSunat.paymentDate} onChange={e => setFormSunat({...formSunat, paymentDate: e.target.value})} /></div>
           </div>
-          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalSunatOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">Guardar Registro</button></div>
+          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalSunatOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">{editingId ? "Actualizar" : "Guardar"}</button></div>
         </form>
       </Modal>
 
       {/* 3. Modal Insumos */}
-      <Modal isOpen={isModalInsumosOpen} onClose={() => setIsModalInsumosOpen(false)} title="Registrar Compra / Crédito de Insumos">
+      <Modal isOpen={isModalInsumosOpen} onClose={() => setIsModalInsumosOpen(false)} title={editingId ? "Editar Insumo" : "Registrar Insumo"}>
         <form onSubmit={handleAddInsumo}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
              <div className="form-group"><label>Fecha de Compra</label><input type="date" className="form-control" value={formInsumo.date} onChange={e => setFormInsumo({...formInsumo, date: e.target.value})} required/></div>
@@ -483,12 +546,12 @@ function App() {
             <div className="form-group"><label>Monto Pagado / Adelanto (S/.)</label><input type="number" step="0.10" className="form-control" value={formInsumo.paidAmount} onChange={e => setFormInsumo({...formInsumo, paidAmount: e.target.value})} /></div>
             <div className="form-group"><label>Fecha de Pago</label><input type="date" className="form-control" value={formInsumo.paymentDate} onChange={e => setFormInsumo({...formInsumo, paymentDate: e.target.value})} /></div>
           </div>
-          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalInsumosOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">Guardar Registro</button></div>
+          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalInsumosOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">{editingId ? "Actualizar" : "Guardar"}</button></div>
         </form>
       </Modal>
 
       {/* 4. Modal Talleres (Corte, Costura, Bordado, Servicio) */}
-      <Modal isOpen={isModalTallerOpen} onClose={() => setIsModalTallerOpen(false)} title={`Registrar - ${formTallerType}`}>
+      <Modal isOpen={isModalTallerOpen} onClose={() => setIsModalTallerOpen(false)} title={editingId ? `Editar - ${formTallerType}` : `Registrar - ${formTallerType}`}>
         <form onSubmit={handleAddTaller}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div className="form-group"><label>Estilo / Nombre</label><input type="text" className="form-control" placeholder="Ej. CURVO" value={formTaller.style} onChange={(e) => setFormTaller({...formTaller, style: e.target.value})} required /></div>
@@ -507,12 +570,12 @@ function App() {
             <div className="form-group"><label>Monto Pagado / Adelanto</label><input type="number" step="0.10" className="form-control" value={formTaller.paidAmount} onChange={(e) => setFormTaller({...formTaller, paidAmount: e.target.value})} /></div>
             <div className="form-group"><label>Fecha de Pago</label><input type="date" className="form-control" value={formTaller.paymentDate} onChange={(e) => setFormTaller({...formTaller, paymentDate: e.target.value})} /></div>
           </div>
-          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalTallerOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">Guardar Registro</button></div>
+          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalTallerOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">{editingId ? "Actualizar" : "Guardar"}</button></div>
         </form>
       </Modal>
 
       {/* 5. Modal Caja Chica */}
-      <Modal isOpen={isModalCajaChicaOpen} onClose={() => setIsModalCajaChicaOpen(false)} title="Nuevo Movimiento - Caja Chica">
+      <Modal isOpen={isModalCajaChicaOpen} onClose={() => setIsModalCajaChicaOpen(false)} title={editingId ? "Editar Movimiento" : "Nuevo Movimiento"}>
         <form onSubmit={handleAddCajaChica}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
              <div className="form-group"><label>Fecha</label><input type="date" className="form-control" value={formCajaChica.date} onChange={e => setFormCajaChica({...formCajaChica, date: e.target.value})} required/></div>
@@ -520,7 +583,7 @@ function App() {
           </div>
           <div className="form-group"><label>Descripción / Motivo</label><input type="text" className="form-control" placeholder="Ej. Pasajes Gamarra" value={formCajaChica.description} onChange={e => setFormCajaChica({...formCajaChica, description: e.target.value})} required/></div>
           <div className="form-group"><label>Monto (S/.)</label><input type="number" step="0.10" className="form-control" value={formCajaChica.amount} onChange={e => setFormCajaChica({...formCajaChica, amount: e.target.value})} required/></div>
-          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalCajaChicaOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">Guardar</button></div>
+          <div className="modal-footer"><button type="button" className="btn btn-danger" onClick={() => setIsModalCajaChicaOpen(false)}>Cancelar</button><button type="submit" className="btn btn-primary">{editingId ? "Actualizar" : "Guardar"}</button></div>
         </form>
       </Modal>
 
