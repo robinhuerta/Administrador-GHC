@@ -16,6 +16,7 @@ export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, p
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
+  const [sortOrder, setSortOrder] = useState('asc');
 
   // Total deuda por categoría (de los registros)
   const deudaMap = sunat.reduce((acc, s) => {
@@ -51,6 +52,13 @@ export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, p
     ? pagos.filter(p => p.beneficiary === selectedCategory && p.tallerType === 'Sunat')
         .sort((a, b) => b.createdAt - a.createdAt)
     : [];
+
+  const sortedRecords = [...catRecords].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
+  const sortedCatPagos = [...catPagos].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
 
   const totalDeuda  = catRecords.reduce((a, s) => a + (parseFloat(s.total) || 0), 0);
   const totalPagado = catPagos.reduce((a, p) => a + (parseFloat(p.amount) || 0), 0);
@@ -144,11 +152,14 @@ export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, p
             <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={openNew}>+ Agregar</button>
           </div>
           <table style={{ fontSize: '0.82rem', width: '100%' }}>
-            <thead><tr><th>Fecha</th><th>Descripción</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th></tr></thead>
+            <thead><tr>
+              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
+              <th>Descripción</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th>
+            </tr></thead>
             <tbody>
-              {catRecords.length === 0
+              {sortedRecords.length === 0
                 ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin registros aún</td></tr>
-                : catRecords.map(s => (
+                : sortedRecords.map(s => (
                   <tr key={s.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{s.date || '-'}</td>
                     <td style={{ fontWeight: 500 }}>{s.description}</td>
@@ -178,11 +189,14 @@ export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, p
             <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={() => setIsPaymentOpen(true)}>+ Pago</button>
           </div>
           <table style={{ fontSize: '0.82rem', width: '100%' }}>
-            <thead><tr><th>Fecha</th><th>Monto</th><th>Concepto</th></tr></thead>
+            <thead><tr>
+              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
+              <th>Monto</th><th>Concepto</th>
+            </tr></thead>
             <tbody>
-              {catPagos.length === 0
+              {sortedCatPagos.length === 0
                 ? <tr><td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin pagos aún</td></tr>
-                : catPagos.map(p => (
+                : sortedCatPagos.map(p => (
                   <tr key={p.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
                     <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.amount)}</td>

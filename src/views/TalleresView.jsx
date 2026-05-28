@@ -17,6 +17,7 @@ export default function TalleresView({ type, lotes, pagos = [], addTaller, delet
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
+  const [sortOrder, setSortOrder] = useState('asc');
 
   const { title, desc, icon } = TITLES[type];
 
@@ -62,6 +63,13 @@ export default function TalleresView({ type, lotes, pagos = [], addTaller, delet
     ? pagos.filter(p => p.beneficiary === selectedProvider && p.tallerType === type)
         .sort((a, b) => b.createdAt - a.createdAt)
     : [];
+
+  const sortedLotes = [...providerLotes].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
+  const sortedPagos = [...providerPagos].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
 
   const totalTrabajo = providerLotes.reduce((a, c) => a + (parseFloat(c.totalCost) || 0), 0);
   const totalPagado = providerPagos.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
@@ -159,12 +167,16 @@ export default function TalleresView({ type, lotes, pagos = [], addTaller, delet
           <div style={{ overflowX: 'auto' }}>
             <table style={{ fontSize: '0.82rem', width: '100%' }}>
               <thead>
-                <tr><th>Estilo / Lote</th><th>Fecha</th><th>Cant.</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th></tr>
+                <tr>
+                  <th>Estilo / Lote</th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
+                  <th>Cant.</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th>
+                </tr>
               </thead>
               <tbody>
-                {providerLotes.length === 0
+                {sortedLotes.length === 0
                   ? <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin lotes aún</td></tr>
-                  : providerLotes.map(t => (
+                  : sortedLotes.map(t => (
                     <tr key={t.id}>
                       <td><div style={{ fontWeight: 600 }}>{t.style}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.code}</div></td>
                       <td style={{ color: 'var(--text-muted)' }}>{t.date}</td>
@@ -198,12 +210,15 @@ export default function TalleresView({ type, lotes, pagos = [], addTaller, delet
           <div style={{ overflowX: 'auto' }}>
             <table style={{ fontSize: '0.82rem', width: '100%' }}>
               <thead>
-                <tr><th>Fecha</th><th>Monto</th><th>Concepto</th></tr>
+                <tr>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
+                  <th>Monto</th><th>Concepto</th>
+                </tr>
               </thead>
               <tbody>
-                {providerPagos.length === 0
+                {sortedPagos.length === 0
                   ? <tr><td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin pagos aún</td></tr>
-                  : providerPagos.map(p => (
+                  : sortedPagos.map(p => (
                     <tr key={p.id}>
                       <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
                       <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.amount)}</td>

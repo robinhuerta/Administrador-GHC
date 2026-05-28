@@ -10,6 +10,7 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
+  const [sortOrder, setSortOrder] = useState('asc');
 
   // Agrupar compras por proveedor
   const providerMap = insumos.reduce((acc, i) => {
@@ -53,6 +54,13 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
     ? pagos.filter(p => p.beneficiary === selectedProvider && p.tallerType === 'Insumos')
         .sort((a, b) => b.createdAt - a.createdAt)
     : [];
+
+  const sortedInsumos = [...providerInsumos].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
+  const sortedPagos = [...providerPagos].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
 
   const totalCompras = providerInsumos.reduce((a, i) => a + (parseFloat(i.totalCost) || 0), 0);
   const totalPagado  = providerPagos.reduce((a, p) => a + (parseFloat(p.amount) || 0), 0);
@@ -147,11 +155,16 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
             <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={openNew}>+ Compra</button>
           </div>
           <table style={{ fontSize: '0.82rem', width: '100%' }}>
-            <thead><tr><th>Fecha</th><th>Factura / Desc.</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th></tr></thead>
+            <thead><tr>
+              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>
+                Fecha {sortOrder === 'asc' ? '↑' : '↓'}
+              </th>
+              <th>Factura / Desc.</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th>
+            </tr></thead>
             <tbody>
-              {providerInsumos.length === 0
+              {sortedInsumos.length === 0
                 ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin compras aún</td></tr>
-                : providerInsumos.map(i => (
+                : sortedInsumos.map(i => (
                   <tr key={i.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{i.date}</td>
                     <td style={{ fontWeight: 500 }}>{i.invoice}</td>
@@ -181,11 +194,16 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
             <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={() => setIsPaymentOpen(true)}>+ Pago</button>
           </div>
           <table style={{ fontSize: '0.82rem', width: '100%' }}>
-            <thead><tr><th>Fecha</th><th>Monto</th><th>Concepto</th></tr></thead>
+            <thead><tr>
+              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>
+                Fecha {sortOrder === 'asc' ? '↑' : '↓'}
+              </th>
+              <th>Monto</th><th>Concepto</th>
+            </tr></thead>
             <tbody>
-              {providerPagos.length === 0
+              {sortedPagos.length === 0
                 ? <tr><td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin pagos aún</td></tr>
-                : providerPagos.map(p => (
+                : sortedPagos.map(p => (
                   <tr key={p.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
                     <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.amount)}</td>

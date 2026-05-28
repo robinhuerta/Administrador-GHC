@@ -10,6 +10,7 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
+  const [sortOrder, setSortOrder] = useState('asc');
 
   // Agrupar por trabajador
   const workerMap = planilla.reduce((acc, item) => {
@@ -48,6 +49,13 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
     ? pagos.filter(p => p.beneficiary === selectedWorker && p.tallerType === 'Planilla')
         .sort((a, b) => b.createdAt - a.createdAt)
     : [];
+
+  const sortedPeriodos = [...workerPeriodos].sort((a, b) =>
+    sortOrder === 'asc' ? (a.periodFrom || '').localeCompare(b.periodFrom || '') : (b.periodFrom || '').localeCompare(a.periodFrom || '')
+  );
+  const sortedWorkerPagos = [...workerPagos].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
 
   const totalTrabajo = workerPeriodos.reduce((a, c) => a + (parseFloat(c.total) || 0), 0);
   const totalPagado = workerPagos.reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
@@ -148,11 +156,14 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
             <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={openNew}>+ Período</button>
           </div>
           <table style={{ fontSize: '0.82rem', width: '100%' }}>
-            <thead><tr><th>Período</th><th>Horas</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th></tr></thead>
+            <thead><tr>
+              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Período {sortOrder === 'asc' ? '↑' : '↓'}</th>
+              <th>Horas</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th>
+            </tr></thead>
             <tbody>
-              {workerPeriodos.length === 0
+              {sortedPeriodos.length === 0
                 ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin períodos aún</td></tr>
-                : workerPeriodos.map(p => (
+                : sortedPeriodos.map(p => (
                   <tr key={p.id}>
                     <td><div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{p.periodFrom}</div><div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{p.periodTo}</div></td>
                     <td>{p.hours || '—'}</td>
@@ -183,11 +194,14 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
             <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={() => setIsPaymentOpen(true)}>+ Pago</button>
           </div>
           <table style={{ fontSize: '0.82rem', width: '100%' }}>
-            <thead><tr><th>Fecha</th><th>Monto</th><th>Concepto</th></tr></thead>
+            <thead><tr>
+              <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
+              <th>Monto</th><th>Concepto</th>
+            </tr></thead>
             <tbody>
-              {workerPagos.length === 0
+              {sortedWorkerPagos.length === 0
                 ? <tr><td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin pagos aún</td></tr>
-                : workerPagos.map(p => (
+                : sortedWorkerPagos.map(p => (
                   <tr key={p.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
                     <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.amount)}</td>

@@ -7,6 +7,7 @@ export default function CajaChicaView({ cajaChica, addCajaChica, deleteCajaChica
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
+  const [sortOrder, setSortOrder] = useState('asc');
 
   const filtered = cajaChica.filter(item => {
     const q = searchQuery.toLowerCase();
@@ -26,6 +27,10 @@ export default function CajaChicaView({ cajaChica, addCajaChica, deleteCajaChica
     handleClose();
     setForm(FORM_EMPTY);
   };
+
+  const sorted = [...filtered].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
 
   const totalIngresos = filtered.reduce((a, c) => c.type === 'Ingreso' ? a + (parseFloat(c.amount) || 0) : a, 0);
   const totalEgresos = filtered.reduce((a, c) => c.type === 'Egreso' ? a + (parseFloat(c.amount) || 0) : a, 0);
@@ -50,14 +55,15 @@ export default function CajaChicaView({ cajaChica, addCajaChica, deleteCajaChica
             <table>
               <thead>
                 <tr>
-                  <th>Fecha</th><th>Descripción</th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
+                  <th>Descripción</th>
                   <th style={{ textAlign: 'right' }}>Ingreso (S/.)</th>
                   <th style={{ textAlign: 'right' }}>Egreso (S/.)</th>
                   <th style={{ textAlign: 'center' }}>Acción</th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(c => (
+                {sorted.map(c => (
                   <tr key={c.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{c.date}</td>
                     <td style={{ fontWeight: 500 }}>{c.description}</td>
