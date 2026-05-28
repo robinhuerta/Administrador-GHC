@@ -48,61 +48,110 @@ body {
   width: var(--sidebar-width);
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
-  padding: 24px;
+  padding: 20px 16px;
   display: flex;
   flex-direction: column;
   position: fixed;
   height: 100vh;
   z-index: 10;
+  overflow: hidden;
+  transition: width 0.25s ease;
 }
 
-.sidebar-logo {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--text-main);
-  margin-bottom: 40px;
+.sidebar.collapsed {
+  width: 64px;
+}
+
+/* Toggle button */
+.sidebar-toggle {
+  position: absolute;
+  top: 18px;
+  right: -13px;
+  width: 26px;
+  height: 26px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  font-size: 0.65rem;
+  z-index: 20;
+  transition: all 0.2s;
+}
+.sidebar-toggle:hover { color: var(--text-main); background: var(--bg-sidebar); }
+
+/* Logo */
+.sidebar-logo {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sidebar-logo span { color: var(--accent); }
+
+/* Section labels */
+.sidebar-section-label {
+  padding: 0 8px;
+  margin-bottom: 6px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.sidebar-logo span {
-  color: var(--accent);
-}
-
+/* Nav */
 .nav-menu {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 9px 10px;
   border-radius: 8px;
   color: var(--text-muted);
   text-decoration: none;
   font-weight: 500;
+  font-size: 0.88rem;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
 }
+.nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
+.nav-item.active { background: rgba(16,185,129,0.1); color: var(--accent); }
 
-.nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text-main);
-}
+/* Nav icon always visible, label hidden when collapsed */
+.nav-icon { font-size: 1rem; flex-shrink: 0; min-width: 20px; text-align: center; }
+.nav-label { overflow: hidden; white-space: nowrap; }
 
-.nav-item.active {
-  background: rgba(16, 185, 129, 0.1);
-  color: var(--accent);
-}
+/* Hide text elements when collapsed */
+.sidebar.collapsed .nav-label,
+.sidebar.collapsed .sidebar-section-label,
+.sidebar.collapsed .sidebar-logo-text,
+.sidebar.collapsed .sidebar-user-email { display: none; }
+
+.sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+.sidebar.collapsed .sidebar-logo { justify-content: center; }
 
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
-  padding: 40px;
+  padding: 32px 40px;
+  transition: margin-left 0.25s ease;
 }
 
 /* Glassmorphism Panel */

@@ -46,6 +46,7 @@ function App() {
   };
 
   const isAdmin = user && user.email === 'admin@ghc.com';
+  const [collapsed, setCollapsed] = useState(false);
 
   // --- COLECCIONES FIRESTORE ---
   const [ventas, addVenta, deleteVenta, updateVenta] = useFirestoreCollection('ghc_ventas');
@@ -140,53 +141,66 @@ function App() {
     );
   }
 
+  const nav = (view, icon, label) => (
+    <a className={`nav-item ${activeView === view ? 'active' : ''}`} onClick={() => setActiveView(view)} title={label}>
+      <span className="nav-icon">{icon}</span>
+      <span className="nav-label">{label}</span>
+    </a>
+  );
+
   // --- LAYOUT PRINCIPAL ---
   return (
     <div className="layout">
-      <aside className="sidebar">
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+        <button className="sidebar-toggle" onClick={() => setCollapsed(!collapsed)} title={collapsed ? 'Expandir' : 'Colapsar'}>
+          {collapsed ? '▶' : '◀'}
+        </button>
+
         <div className="sidebar-logo">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
-          GHC <span>Gorras</span>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+          <span className="sidebar-logo-text">GHC <span>Gorras</span></span>
         </div>
 
         {isAdmin && (
           <>
-            <div style={{ padding: '0 16px', marginBottom: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Principal</div>
-            <nav className="nav-menu" style={{ marginBottom: '24px' }}>
-              <a className={`nav-item ${activeView === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveView('dashboard')}>Caja General</a>
-              <a className={`nav-item ${activeView === 'ventas' ? 'active' : ''}`} onClick={() => setActiveView('ventas')}>Cobros a Clientes</a>
+            <div className="sidebar-section-label">Principal</div>
+            <nav className="nav-menu" style={{ marginBottom: '16px' }}>
+              {nav('dashboard', '🏠', 'Caja General')}
+              {nav('ventas',    '📦', 'Cobros a Clientes')}
             </nav>
           </>
         )}
-
         {!isAdmin && (
-          <nav className="nav-menu" style={{ marginBottom: '24px' }}>
-            <a className={`nav-item ${activeView === 'ventas' ? 'active' : ''}`} onClick={() => setActiveView('ventas')}>Entregas y Cobros</a>
+          <nav className="nav-menu" style={{ marginBottom: '16px' }}>
+            {nav('ventas', '📦', 'Entregas y Cobros')}
           </nav>
         )}
 
-        <div style={{ padding: '0 16px', marginBottom: '12px', fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Egresos y Pagos</div>
+        <div className="sidebar-section-label">Egresos y Pagos</div>
         <nav className="nav-menu">
-          {isAdmin && <a className={`nav-item ${activeView === 'planilla' ? 'active' : ''}`} onClick={() => setActiveView('planilla')}>Planilla de Personal</a>}
-          {isAdmin && <a className={`nav-item ${activeView === 'sunat' ? 'active' : ''}`} onClick={() => setActiveView('sunat')}>Contador y SUNAT</a>}
-          <a className={`nav-item ${activeView === 'insumos' ? 'active' : ''}`} onClick={() => setActiveView('insumos')}>Compras / Créditos</a>
-          <a className={`nav-item ${activeView === 'corte' ? 'active' : ''}`} onClick={() => setActiveView('corte')}>Producción: Corte</a>
-          <a className={`nav-item ${activeView === 'costura' ? 'active' : ''}`} onClick={() => setActiveView('costura')}>Producción: Costura</a>
-          <a className={`nav-item ${activeView === 'bordado' ? 'active' : ''}`} onClick={() => setActiveView('bordado')}>Producción: Bordados</a>
-          <a className={`nav-item ${activeView === 'servicio' ? 'active' : ''}`} onClick={() => setActiveView('servicio')}>Otros Servicios</a>
-          <a className={`nav-item ${activeView === 'cajachica' ? 'active' : ''}`} onClick={() => setActiveView('cajachica')}>Caja Chica</a>
+          {isAdmin && nav('planilla',  '👤', 'Planilla')}
+          {isAdmin && nav('sunat',     '📋', 'SUNAT / Contador')}
+          {nav('insumos',  '🛍️', 'Compras / Créditos')}
+          {nav('corte',    '✂️', 'Corte')}
+          {nav('costura',  '🧵', 'Costura')}
+          {nav('bordado',  '🪡', 'Bordados')}
+          {nav('servicio', '🔧', 'Otros Servicios')}
+          {nav('cajachica','💰', 'Caja Chica')}
         </nav>
 
-        <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
-          <div style={{ padding: '0 16px', marginBottom: '8px', fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600 }}>👤 {user.email}</div>
-          {isAdmin && <a className={`nav-item ${activeView === 'cleanup' ? 'active' : ''}`} style={{ color: 'var(--danger)', fontSize: '0.8rem' }} onClick={() => setActiveView('cleanup')}>🗑️ Limpiar BD</a>}
-          <button className="nav-item" style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--danger)', display: 'flex', justifyContent: 'flex-start', cursor: 'pointer' }} onClick={() => signOut(auth)}>
-            🚪 Cerrar Sesión
+        <div style={{ marginTop: 'auto', paddingTop: '16px', overflow: 'hidden' }}>
+          <div className="sidebar-user-email" style={{ padding: '0 10px', marginBottom: '6px', fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            👤 {user.email}
+          </div>
+          {isAdmin && nav('cleanup', '🗑️', 'Limpiar BD')}
+          <button className="nav-item" style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer' }} onClick={() => signOut(auth)}>
+            <span className="nav-icon">🚪</span>
+            <span className="nav-label">Cerrar Sesión</span>
           </button>
         </div>
       </aside>
 
-      <main className="main-content">
+      <main className="main-content" style={{ marginLeft: collapsed ? '64px' : 'var(--sidebar-width)' }}>
         {activeView !== 'dashboard' && (
           <div className="glass-panel fade-in" style={{ display: 'flex', gap: '16px', marginBottom: '24px', padding: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
             <span style={{ fontWeight: 600, color: 'var(--text-muted)' }}>🔍 Filtros:</span>
