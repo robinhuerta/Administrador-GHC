@@ -225,7 +225,9 @@ function App() {
         {activeView === 'dashboard' && (
           <DashboardView
             totalIngresos={totalIngresos} totalEgresos={totalEgresos}
-            totalPagadoPlanilla={totalPagadoPlanilla} totalPagadoSunat={totalPagadoSunat} totalPagadoTalleres={totalPagadoTalleres}
+            totalPagadoPlanilla={totalPagadoPlanilla} totalPagadoSunat={totalPagadoSunat}
+            totalPagadoTalleres={totalPagadoTalleres} totalPagadoInsumos={totalPagadoInsumos}
+            egresosCajaChica={egresosCajaChica}
             saldoPorCobrarClientes={saldoPorCobrarClientes} deudaTalleres={deudaTalleres}
             deudaPlanilla={deudaPlanilla} deudaSunat={deudaSunat} deudaInsumos={deudaInsumos}
             formatCurrency={formatCurrency}
