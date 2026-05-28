@@ -224,7 +224,7 @@ function App() {
         {activeView === 'ventas' && <VentasView ventas={ventas} addVenta={addVenta} deleteVenta={deleteVenta} updateVenta={updateVenta} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'planilla' && <PlanillaView planilla={planilla} addPlanilla={addPlanilla} deletePlanilla={deletePlanilla} updatePlanilla={updatePlanilla} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'sunat' && <SunatView sunat={sunat} addSunat={addSunat} deleteSunat={deleteSunat} updateSunat={updateSunat} pagos={pagos} addPago={addPago} {...shared} />}
-        {activeView === 'insumos' && <InsumosView insumos={insumos} addInsumo={addInsumo} deleteInsumo={deleteInsumo} updateInsumo={updateInsumo} {...shared} />}
+        {activeView === 'insumos' && <InsumosView insumos={insumos} addInsumo={addInsumo} deleteInsumo={deleteInsumo} updateInsumo={updateInsumo} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'corte' && <TalleresView key="corte" type="Corte" lotes={lotesCorte} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'costura' && <TalleresView key="costura" type="Costura" lotes={lotesCostura} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'bordado' && <TalleresView key="bordado" type="Bordado" lotes={lotesBordado} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
