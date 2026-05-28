@@ -171,7 +171,7 @@ function App() {
           <a className={`nav-item ${activeView === 'corte' ? 'active' : ''}`} onClick={() => setActiveView('corte')}>Producción: Corte</a>
           <a className={`nav-item ${activeView === 'costura' ? 'active' : ''}`} onClick={() => setActiveView('costura')}>Producción: Costura</a>
           <a className={`nav-item ${activeView === 'bordado-victor' ? 'active' : ''}`} onClick={() => setActiveView('bordado-victor')}>Bordados: VICTOR</a>
-          <a className={`nav-item ${activeView === 'bordado-edhit' ? 'active' : ''}`} onClick={() => setActiveView('bordado-edhit')}>Bordados: EDHIT</a>
+          <a className={`nav-item ${activeView === 'bordado-edith' ? 'active' : ''}`} onClick={() => setActiveView('bordado-edith')}>Bordados: EDITH</a>
           <a className={`nav-item ${activeView === 'servicio' ? 'active' : ''}`} onClick={() => setActiveView('servicio')}>Otros Servicios</a>
           <a className={`nav-item ${activeView === 'cajachica' ? 'active' : ''}`} onClick={() => setActiveView('cajachica')}>Caja Chica</a>
         </nav>
@@ -212,7 +212,7 @@ function App() {
         {activeView === 'corte' && <TalleresView key="corte" type="Corte" lotes={lotesCorte} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
         {activeView === 'costura' && <TalleresView key="costura" type="Costura" lotes={lotesCostura} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
         {activeView === 'bordado-victor' && <TalleresView key="bordado-victor" type="Bordado" lotes={lotesBordado} providerFilter="VICTOR" defaultProvider="VICTOR" addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
-        {activeView === 'bordado-edhit'  && <TalleresView key="bordado-edhit"  type="Bordado" lotes={lotesBordado} providerFilter="EDHIT"  defaultProvider="EDHIT"  addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
+        {activeView === 'bordado-edith'  && <TalleresView key="bordado-edith"  type="Bordado" lotes={lotesBordado} providerFilter="EDITH"  defaultProvider="EDITH"  addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
         {activeView === 'servicio' && <TalleresView key="servicio" type="Servicio" lotes={lotesServicio} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
         {activeView === 'cajachica' && <CajaChicaView cajaChica={cajaChica} addCajaChica={addCajaChica} deleteCajaChica={deleteCajaChica} updateCajaChica={updateCajaChica} {...shared} />}
       </main>
