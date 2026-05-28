@@ -4,10 +4,60 @@ import PaymentModal from '../components/PaymentModal';
 
 const FORM_EMPTY = { date: '', code: '', client: '', model: '', responsible: '', quantity: '', price: '', paymentType: 'EFECTIVO', bank: '', paymentDate: '' };
 
+function printDeliveryNote(venta) {
+  const fmt = (n) => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(n || 0);
+  const num = Date.now().toString().slice(-6);
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"/><title>Nota de Entrega GHC #${num}</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Courier New',monospace;padding:28px;max-width:380px;margin:0 auto;font-size:13px;color:#000}
+  .center{text-align:center}.bold{font-weight:700}
+  .dash{border-top:1px dashed #000;margin:10px 0}
+  .row{display:flex;justify-content:space-between;padding:3px 0}
+  .big{font-size:16px;font-weight:700;padding:6px 0}
+</style></head>
+<body>
+  <div class="center">
+    <div class="bold" style="font-size:22px;letter-spacing:2px">GHC GORRAS</div>
+    <div class="bold" style="font-size:14px;margin:4px 0">NOTA DE ENTREGA</div>
+    <div style="color:#555">N° ${num}</div>
+  </div>
+  <div class="dash"></div>
+  <div class="row"><span>Fecha:</span><span>${venta.date}</span></div>
+  <div class="row"><span>Cliente:</span><span class="bold">${venta.client}</span></div>
+  ${venta.responsible ? `<div class="row"><span>Responsable:</span><span>${venta.responsible}</span></div>` : ''}
+  <div class="dash"></div>
+  <div class="row"><span>Código:</span><span class="bold">${venta.code}</span></div>
+  <div class="row"><span>Modelo:</span><span>${venta.model}</span></div>
+  <div class="row"><span>Cantidad:</span><span>${venta.quantity} unidades</span></div>
+  <div class="row"><span>Precio unit.:</span><span>${fmt(venta.price)}</span></div>
+  <div class="dash"></div>
+  <div class="row big"><span>TOTAL:</span><span>${fmt(venta.totalValue)}</span></div>
+  <div class="dash"></div>
+  <div style="display:flex;justify-content:space-between;margin-top:48px">
+    <div style="text-align:center">
+      <div style="border-top:1px solid #000;width:140px;margin-bottom:6px"></div>
+      <div>Firma del cliente</div>
+    </div>
+    <div style="text-align:center">
+      <div style="border-top:1px solid #000;width:140px;margin-bottom:6px"></div>
+      <div>Entregado por</div>
+    </div>
+  </div>
+  <script>window.onload=function(){window.print();}</script>
+</body></html>`;
+  const win = window.open('', '_blank', 'width=440,height=640');
+  win.document.write(html);
+  win.document.close();
+}
+
 export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta, pagos = [], addPago, isAdmin, formatCurrency, exportToCSV, searchQuery, dateFilter }) {
   const [selectedClient, setSelectedClient] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [deliveryPhase, setDeliveryPhase] = useState(false);
+  const [lastVenta, setLastVenta] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
 
@@ -61,15 +111,21 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
   const emptyForm = { ...FORM_EMPTY, client: selectedClient || '' };
   const openNew = () => { setEditingId(null); setForm(emptyForm); setIsModalOpen(true); };
   const openEdit = (item) => { setEditingId(item.id); setForm({ ...item }); setIsModalOpen(true); };
-  const handleClose = () => { setIsModalOpen(false); setEditingId(null); };
+  const handleClose = () => { setIsModalOpen(false); setEditingId(null); setDeliveryPhase(false); setLastVenta(null); };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const qty = parseFloat(form.quantity) || 0;
     const price = parseFloat(form.price) || 0;
-    const data = { date: form.date, code: form.code, client: form.client, model: form.model, responsible: form.responsible, quantity: qty, price, totalValue: qty * price, paidAmount: 0, paymentType: form.paymentType, bank: form.bank || '-', paymentDate: form.paymentDate };
-    if (editingId) updateVenta(editingId, data); else addVenta(data);
-    handleClose();
+    const data = { date: form.date, code: form.code, client: form.client || selectedClient, model: form.model, responsible: form.responsible, quantity: qty, price, totalValue: qty * price, paidAmount: 0, paymentType: form.paymentType, bank: form.bank || '-', paymentDate: form.paymentDate };
+    if (editingId) {
+      updateVenta(editingId, data);
+      handleClose();
+    } else {
+      addVenta(data);
+      setLastVenta(data);
+      setDeliveryPhase(true);
+    }
     setForm(emptyForm);
   };
 
@@ -121,8 +177,12 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
           )
         }
 
-        <Modal isOpen={isModalOpen} onClose={handleClose} title="Registrar Entrega / Cobro">
-          <VentaForm form={form} setForm={setForm} onSubmit={handleSubmit} onCancel={handleClose} editingId={editingId} showClient />
+        <Modal isOpen={isModalOpen} onClose={handleClose}
+          title={deliveryPhase ? '📄 Nota de Entrega' : 'Registrar Entrega'}>
+          {!deliveryPhase
+            ? <VentaForm form={form} setForm={setForm} onSubmit={handleSubmit} onCancel={handleClose} editingId={editingId} showClient />
+            : <DeliveryNote venta={lastVenta} onClose={handleClose} onPrint={() => printDeliveryNote(lastVenta)} formatCurrency={formatCurrency} />
+          }
         </Modal>
       </div>
     );
@@ -231,8 +291,12 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
         </span>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={handleClose} title={editingId ? 'Editar Entrega' : `Nueva Entrega — ${selectedClient}`}>
-        <VentaForm form={form} setForm={setForm} onSubmit={handleSubmit} onCancel={handleClose} editingId={editingId} showClient={!!editingId} />
+      <Modal isOpen={isModalOpen} onClose={handleClose}
+        title={deliveryPhase ? '📄 Nota de Entrega' : (editingId ? 'Editar Entrega' : `Nueva Entrega — ${selectedClient}`)}>
+        {!deliveryPhase
+          ? <VentaForm form={form} setForm={setForm} onSubmit={handleSubmit} onCancel={handleClose} editingId={editingId} showClient={!!editingId} />
+          : <DeliveryNote venta={lastVenta} onClose={handleClose} onPrint={() => printDeliveryNote(lastVenta)} formatCurrency={formatCurrency} />
+        }
       </Modal>
 
       <PaymentModal
@@ -245,6 +309,54 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
         addPago={addPago}
         formatCurrency={formatCurrency}
       />
+    </div>
+  );
+}
+
+function DeliveryNote({ venta, onClose, onPrint, formatCurrency }) {
+  if (!venta) return null;
+  const Row = ({ label, value, bold }) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+      <span>{label}</span>
+      {bold ? <strong>{value}</strong> : <span>{value}</span>}
+    </div>
+  );
+  return (
+    <div>
+      <div style={{ fontFamily: "'Courier New', monospace", border: '2px dashed var(--border-color)', borderRadius: '8px', padding: '24px', fontSize: '0.82rem', lineHeight: 1.9 }}>
+        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+          <div style={{ fontWeight: 700, fontSize: '1.2rem', letterSpacing: '2px' }}>GHC GORRAS</div>
+          <div style={{ fontWeight: 600 }}>NOTA DE ENTREGA</div>
+        </div>
+        <div style={{ borderTop: '1px dashed var(--border-color)', margin: '10px 0' }} />
+        <Row label="Fecha:" value={venta.date} />
+        <Row label="Cliente:" value={venta.client} bold />
+        {venta.responsible && <Row label="Responsable:" value={venta.responsible} />}
+        <div style={{ borderTop: '1px dashed var(--border-color)', margin: '10px 0' }} />
+        <Row label="Código:" value={venta.code} bold />
+        <Row label="Modelo:" value={venta.model} />
+        <Row label="Cantidad:" value={`${venta.quantity} unidades`} />
+        <Row label="Precio unit.:" value={formatCurrency(venta.price)} />
+        <div style={{ borderTop: '1px dashed var(--border-color)', margin: '10px 0' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '0.95rem' }}>
+          <span>TOTAL:</span><span>{formatCurrency(venta.totalValue)}</span>
+        </div>
+        <div style={{ borderTop: '1px dashed var(--border-color)', margin: '16px 0 10px' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ borderTop: '1px solid var(--border-color)', width: '130px', marginBottom: '6px' }} />
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Firma del cliente</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ borderTop: '1px solid var(--border-color)', width: '130px', marginBottom: '6px' }} />
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Entregado por</div>
+          </div>
+        </div>
+      </div>
+      <div className="modal-footer" style={{ marginTop: '16px' }}>
+        <button className="btn" style={{ background: 'transparent', border: '1px solid var(--border-color)', color: 'var(--text-main)' }} onClick={onClose}>Cerrar</button>
+        <button className="btn btn-primary" onClick={onPrint}>🖨️ Imprimir Nota</button>
+      </div>
     </div>
   );
 }
