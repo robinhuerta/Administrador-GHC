@@ -169,7 +169,8 @@ function App() {
           {isAdmin && <a className={`nav-item ${activeView === 'sunat' ? 'active' : ''}`} onClick={() => setActiveView('sunat')}>Contador y SUNAT</a>}
           <a className={`nav-item ${activeView === 'insumos' ? 'active' : ''}`} onClick={() => setActiveView('insumos')}>Compras / Créditos</a>
           <a className={`nav-item ${activeView === 'corte' ? 'active' : ''}`} onClick={() => setActiveView('corte')}>Producción: Corte</a>
-          <a className={`nav-item ${activeView === 'costura' ? 'active' : ''}`} onClick={() => setActiveView('costura')}>Producción: Costura</a>
+          <a className={`nav-item ${activeView === 'costura-mily' ? 'active' : ''}`} onClick={() => setActiveView('costura-mily')}>Costura: MILY</a>
+          <a className={`nav-item ${activeView === 'costura-piero' ? 'active' : ''}`} onClick={() => setActiveView('costura-piero')}>Costura: PIERO</a>
           <a className={`nav-item ${activeView === 'bordado-victor' ? 'active' : ''}`} onClick={() => setActiveView('bordado-victor')}>Bordados: VICTOR</a>
           <a className={`nav-item ${activeView === 'bordado-edith' ? 'active' : ''}`} onClick={() => setActiveView('bordado-edith')}>Bordados: EDITH</a>
           <a className={`nav-item ${activeView === 'servicio' ? 'active' : ''}`} onClick={() => setActiveView('servicio')}>Otros Servicios</a>
@@ -210,7 +211,8 @@ function App() {
         {activeView === 'sunat' && <SunatView sunat={sunat} addSunat={addSunat} deleteSunat={deleteSunat} updateSunat={updateSunat} {...shared} />}
         {activeView === 'insumos' && <InsumosView insumos={insumos} addInsumo={addInsumo} deleteInsumo={deleteInsumo} updateInsumo={updateInsumo} {...shared} />}
         {activeView === 'corte' && <TalleresView key="corte" type="Corte" lotes={lotesCorte} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
-        {activeView === 'costura' && <TalleresView key="costura" type="Costura" lotes={lotesCostura} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
+        {activeView === 'costura-mily'  && <TalleresView key="costura-mily"  type="Costura" lotes={lotesCostura} providerFilter="MILY"  defaultProvider="MILY"  addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
+        {activeView === 'costura-piero' && <TalleresView key="costura-piero" type="Costura" lotes={lotesCostura} providerFilter="PIERO" defaultProvider="PIERO" addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
         {activeView === 'bordado-victor' && <TalleresView key="bordado-victor" type="Bordado" lotes={lotesBordado} providerFilter="VICTOR" defaultProvider="VICTOR" addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
         {activeView === 'bordado-edith'  && <TalleresView key="bordado-edith"  type="Bordado" lotes={lotesBordado} providerFilter="EDITH"  defaultProvider="EDITH"  addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
         {activeView === 'servicio' && <TalleresView key="servicio" type="Servicio" lotes={lotesServicio} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
