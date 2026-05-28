@@ -9,6 +9,7 @@ import SunatView from './views/SunatView';
 import InsumosView from './views/InsumosView';
 import TalleresView from './views/TalleresView';
 import CajaChicaView from './views/CajaChicaView';
+import CleanupView from './views/CleanupView';
 import './index.css';
 
 function App() {
@@ -178,6 +179,7 @@ function App() {
 
         <div style={{ marginTop: 'auto', paddingTop: '24px' }}>
           <div style={{ padding: '0 16px', marginBottom: '8px', fontSize: '0.8rem', color: 'var(--accent)', fontWeight: 600 }}>👤 {user.email}</div>
+          {isAdmin && <a className={`nav-item ${activeView === 'cleanup' ? 'active' : ''}`} style={{ color: 'var(--danger)', fontSize: '0.8rem' }} onClick={() => setActiveView('cleanup')}>🗑️ Limpiar BD</a>}
           <button className="nav-item" style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--danger)', display: 'flex', justifyContent: 'flex-start', cursor: 'pointer' }} onClick={() => signOut(auth)}>
             🚪 Cerrar Sesión
           </button>
@@ -214,6 +216,7 @@ function App() {
         {activeView === 'bordado' && <TalleresView key="bordado" type="Bordado" lotes={lotesBordado} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'servicio' && <TalleresView key="servicio" type="Servicio" lotes={lotesServicio} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'cajachica' && <CajaChicaView cajaChica={cajaChica} addCajaChica={addCajaChica} deleteCajaChica={deleteCajaChica} updateCajaChica={updateCajaChica} {...shared} />}
+        {activeView === 'cleanup' && isAdmin && <CleanupView />}
       </main>
     </div>
   );
