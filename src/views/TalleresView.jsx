@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import Modal from '../components/Modal';
 
-const FORM_EMPTY = { style: '', date: '', code: '', quantity: '', provider: '', unitPrice: '', paidAmount: '', paymentDate: '' };
-
 const TITLES = {
   Corte:    { title: 'Producción: Corte',              desc: 'Control de lotes y saldo del cortador.' },
   Costura:  { title: 'Producción: Costura (Confección)', desc: 'Control de lotes entregados a talleres externos.' },
@@ -10,14 +8,23 @@ const TITLES = {
   Servicio: { title: 'Otros Servicios',                 desc: 'Lavado, planchado u otros servicios externos.' },
 };
 
-export default function TalleresView({ type, lotes, addTaller, deleteTaller, updateTaller, isAdmin, formatCurrency, exportToCSV, searchQuery, dateFilter }) {
+export default function TalleresView({ type, lotes, addTaller, deleteTaller, updateTaller, isAdmin, formatCurrency, exportToCSV, searchQuery, dateFilter, providerFilter, defaultProvider }) {
+  const emptyForm = { style: '', date: '', code: '', quantity: '', provider: defaultProvider || '', unitPrice: '', paidAmount: '', paymentDate: '' };
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState(FORM_EMPTY);
+  const [form, setForm] = useState(emptyForm);
 
-  const { title, desc } = TITLES[type];
+  const { title: baseTitle, desc: baseDesc } = TITLES[type];
+  const title = providerFilter ? `${baseTitle}: ${providerFilter}` : baseTitle;
+  const desc = providerFilter ? `Lotes del bordador ${providerFilter}.` : baseDesc;
 
-  const filtered = lotes.filter(item => {
+  // Si hay filtro de proveedor, pre-filtramos antes de aplicar búsqueda/fecha
+  const lotesFiltradosPorProveedor = providerFilter
+    ? lotes.filter(t => t.provider && t.provider.toUpperCase() === providerFilter.toUpperCase())
+    : lotes;
+
+  const filtered = lotesFiltradosPorProveedor.filter(item => {
     const q = searchQuery.toLowerCase();
     const matchSearch = !q ||
       (item.style && item.style.toLowerCase().includes(q)) ||
@@ -27,7 +34,7 @@ export default function TalleresView({ type, lotes, addTaller, deleteTaller, upd
     return matchSearch && matchDate;
   });
 
-  const openNew = () => { setEditingId(null); setForm(FORM_EMPTY); setIsModalOpen(true); };
+  const openNew = () => { setEditingId(null); setForm(emptyForm); setIsModalOpen(true); };
   const openEdit = (item) => { setEditingId(item.id); setForm(item); setIsModalOpen(true); };
   const handleClose = () => { setIsModalOpen(false); setEditingId(null); };
 
@@ -43,7 +50,7 @@ export default function TalleresView({ type, lotes, addTaller, deleteTaller, upd
     };
     if (editingId) updateTaller(editingId, data); else addTaller(data);
     handleClose();
-    setForm(FORM_EMPTY);
+    setForm(emptyForm);
   };
 
   return (
