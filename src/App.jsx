@@ -53,6 +53,7 @@ function App() {
   const [lotesTalleres, addTaller, deleteTaller, updateTaller] = useFirestoreCollection('ghc_lotes_talleres');
   const [insumos, addInsumo, deleteInsumo, updateInsumo] = useFirestoreCollection('ghc_insumos');
   const [cajaChica, addCajaChica, deleteCajaChica, updateCajaChica] = useFirestoreCollection('ghc_cajachica');
+  const [pagos, addPago] = useFirestoreCollection('ghc_pagos');
 
   // --- FILTROS GLOBALES ---
   const [searchQuery, setSearchQuery] = useState('');
@@ -205,13 +206,13 @@ function App() {
           />
         )}
         {activeView === 'ventas' && <VentasView ventas={ventas} addVenta={addVenta} deleteVenta={deleteVenta} updateVenta={updateVenta} {...shared} />}
-        {activeView === 'planilla' && <PlanillaView planilla={planilla} addPlanilla={addPlanilla} deletePlanilla={deletePlanilla} updatePlanilla={updatePlanilla} {...shared} />}
+        {activeView === 'planilla' && <PlanillaView planilla={planilla} addPlanilla={addPlanilla} deletePlanilla={deletePlanilla} updatePlanilla={updatePlanilla} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'sunat' && <SunatView sunat={sunat} addSunat={addSunat} deleteSunat={deleteSunat} updateSunat={updateSunat} {...shared} />}
         {activeView === 'insumos' && <InsumosView insumos={insumos} addInsumo={addInsumo} deleteInsumo={deleteInsumo} updateInsumo={updateInsumo} {...shared} />}
-        {activeView === 'corte' && <TalleresView key="corte" type="Corte" lotes={lotesCorte} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
-        {activeView === 'costura' && <TalleresView key="costura" type="Costura" lotes={lotesCostura} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
-        {activeView === 'bordado' && <TalleresView key="bordado" type="Bordado" lotes={lotesBordado} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
-        {activeView === 'servicio' && <TalleresView key="servicio" type="Servicio" lotes={lotesServicio} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} {...shared} />}
+        {activeView === 'corte' && <TalleresView key="corte" type="Corte" lotes={lotesCorte} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
+        {activeView === 'costura' && <TalleresView key="costura" type="Costura" lotes={lotesCostura} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
+        {activeView === 'bordado' && <TalleresView key="bordado" type="Bordado" lotes={lotesBordado} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
+        {activeView === 'servicio' && <TalleresView key="servicio" type="Servicio" lotes={lotesServicio} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'cajachica' && <CajaChicaView cajaChica={cajaChica} addCajaChica={addCajaChica} deleteCajaChica={deleteCajaChica} updateCajaChica={updateCajaChica} {...shared} />}
       </main>
     </div>
