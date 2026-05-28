@@ -207,7 +207,7 @@ function App() {
             formatCurrency={formatCurrency}
           />
         )}
-        {activeView === 'ventas' && <VentasView ventas={ventas} addVenta={addVenta} deleteVenta={deleteVenta} updateVenta={updateVenta} {...shared} />}
+        {activeView === 'ventas' && <VentasView ventas={ventas} addVenta={addVenta} deleteVenta={deleteVenta} updateVenta={updateVenta} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'planilla' && <PlanillaView planilla={planilla} addPlanilla={addPlanilla} deletePlanilla={deletePlanilla} updatePlanilla={updatePlanilla} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'sunat' && <SunatView sunat={sunat} addSunat={addSunat} deleteSunat={deleteSunat} updateSunat={updateSunat} {...shared} />}
         {activeView === 'insumos' && <InsumosView insumos={insumos} addInsumo={addInsumo} deleteInsumo={deleteInsumo} updateInsumo={updateInsumo} {...shared} />}
