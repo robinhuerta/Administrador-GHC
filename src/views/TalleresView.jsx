@@ -21,7 +21,7 @@ export default function TalleresView({ type, lotes, addTaller, deleteTaller, upd
 
   // Si hay filtro de proveedor, pre-filtramos antes de aplicar búsqueda/fecha
   const lotesFiltradosPorProveedor = providerFilter
-    ? lotes.filter(t => t.provider && t.provider.toUpperCase() === providerFilter.toUpperCase())
+    ? lotes.filter(t => t.provider && t.provider.toUpperCase().includes(providerFilter.toUpperCase()))
     : lotes;
 
   const filtered = lotesFiltradosPorProveedor.filter(item => {
