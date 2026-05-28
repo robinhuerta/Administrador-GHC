@@ -61,20 +61,30 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
-  // --- CÁLCULOS PARA DASHBOARD ---
-  const totalIngresos = ventas.reduce((a, c) => a + (parseFloat(c.paidAmount) || 0), 0);
-  const totalPagadoTalleres = lotesTalleres.reduce((a, c) => a + (parseFloat(c.paidAmount) || 0), 0);
-  const totalPagadoPlanilla = planilla.reduce((a, c) => a + (parseFloat(c.paidAmount) || 0), 0);
-  const totalPagadoSunat = sunat.reduce((a, c) => a + (parseFloat(c.paidAmount) || 0), 0);
-  const totalPagadoInsumos = insumos.reduce((a, c) => a + (parseFloat(c.paidAmount) || 0), 0);
+  // --- CÁLCULOS PARA DASHBOARD (usa ghc_pagos como fuente de pagos) ---
+  const sumarPagos = (...types) =>
+    pagos.filter(p => types.includes(p.tallerType)).reduce((a, p) => a + (parseFloat(p.amount) || 0), 0);
+
+  const totalIngresos      = sumarPagos('Ventas');
+  const totalPagadoTalleres = sumarPagos('Corte', 'Costura', 'Bordado', 'Servicio');
+  const totalPagadoPlanilla = sumarPagos('Planilla');
+  const totalPagadoSunat    = sumarPagos('Sunat');
+  const totalPagadoInsumos  = sumarPagos('Insumos');
   const egresosCajaChica = cajaChica.filter(c => c.type === 'Egreso').reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
   const totalEgresos = totalPagadoPlanilla + totalPagadoSunat + totalPagadoTalleres + totalPagadoInsumos + egresosCajaChica;
 
-  const saldoPorCobrarClientes = ventas.reduce((a, c) => a + ((parseFloat(c.totalValue) || 0) - (parseFloat(c.paidAmount) || 0)), 0);
-  const deudaTalleres = lotesTalleres.reduce((a, c) => a + ((parseFloat(c.totalCost) || 0) - (parseFloat(c.paidAmount) || 0)), 0);
-  const deudaPlanilla = planilla.reduce((a, c) => a + ((parseFloat(c.total) || 0) - (parseFloat(c.paidAmount) || 0)), 0);
-  const deudaSunat = sunat.reduce((a, c) => a + ((parseFloat(c.total) || 0) - (parseFloat(c.paidAmount) || 0)), 0);
-  const deudaInsumos = insumos.reduce((a, c) => a + ((parseFloat(c.totalCost) || 0) - (parseFloat(c.paidAmount) || 0)), 0);
+  // Deudas: total registrado - total pagado desde ghc_pagos
+  const totalVentasValue   = ventas.reduce((a, c) => a + (parseFloat(c.totalValue) || 0), 0);
+  const totalLotesCost     = lotesTalleres.reduce((a, c) => a + (parseFloat(c.totalCost) || 0), 0);
+  const totalPlanillaValue = planilla.reduce((a, c) => a + (parseFloat(c.total) || 0), 0);
+  const totalSunatValue    = sunat.reduce((a, c) => a + (parseFloat(c.total) || 0), 0);
+  const totalInsumosValue  = insumos.reduce((a, c) => a + (parseFloat(c.totalCost) || 0), 0);
+
+  const saldoPorCobrarClientes = totalVentasValue - totalIngresos;
+  const deudaTalleres  = totalLotesCost     - totalPagadoTalleres;
+  const deudaPlanilla  = totalPlanillaValue - totalPagadoPlanilla;
+  const deudaSunat     = totalSunatValue    - totalPagadoSunat;
+  const deudaInsumos   = totalInsumosValue  - totalPagadoInsumos;
 
   // --- UTILIDADES ---
   const formatCurrency = (amount) => new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(amount);
