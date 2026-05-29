@@ -145,12 +145,11 @@ export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, p
         <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(catRecords, `Sunat_${selectedCategory}`)}>📊 Exportar</button>
       </header>
 
-      {/* Saldo banner */}
-      <div className="glass-panel" style={{ marginBottom: '16px', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#f59e0b' : '#34d399'}` }}>
-        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO PENDIENTE</span>
-        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#f59e0b' : '#34d399' }}>
-          {saldo > 0 ? formatCurrency(saldo) : 'Al día ✓'}
-        </span>
+      {/* Resumen rápido */}
+      <div className="stats-grid" style={{ marginBottom: '12px' }}>
+        <div className="glass-panel stat-card"><span className="text-muted">Total Obligaciones</span><span style={{ fontSize: '1.3rem', fontWeight: 700 }}>{formatCurrency(totalDeuda)}</span></div>
+        <div className="glass-panel stat-card"><span className="text-muted">Total Pagado</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: '#34d399' }}>{formatCurrency(totalPagado)}</span></div>
+        <div className="glass-panel stat-card"><span className="text-muted">Saldo Pendiente</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: saldo > 0 ? '#f59e0b' : '#34d399' }}>{saldo > 0 ? formatCurrency(saldo) : 'Al día ✓'}</span></div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
