@@ -49,6 +49,10 @@ export default function TalleresView({ type, lotes, pagos = [], addTaller, delet
     !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const grandTotal  = providerList.reduce((a, p) => a + p.totalCost, 0);
+  const grandPagado = providerList.reduce((a, p) => a + p.totalPagado, 0);
+  const grandSaldo  = grandTotal - grandPagado;
+
   // Registros del proveedor seleccionado
   const providerLotes = selectedProvider
     ? lotes.filter(t => {
@@ -100,6 +104,14 @@ export default function TalleresView({ type, lotes, pagos = [], addTaller, delet
           <div><h1>{title}</h1><p className="text-muted">{desc}</p></div>
           <button className="btn btn-primary" onClick={openNew}>+ Nuevo Lote</button>
         </header>
+
+        {providerList.length > 0 && (
+          <div className="stats-grid" style={{ marginBottom: '12px' }}>
+            <div className="glass-panel stat-card"><span className="text-muted">Total Trabajo</span><span style={{ fontSize: '1.3rem', fontWeight: 700 }}>{formatCurrency(grandTotal)}</span></div>
+            <div className="glass-panel stat-card"><span className="text-muted">Total Pagado</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: '#34d399' }}>{formatCurrency(grandPagado)}</span></div>
+            <div className="glass-panel stat-card"><span className="text-muted">Saldo Pendiente</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: grandSaldo > 0 ? '#f59e0b' : '#34d399' }}>{grandSaldo > 0 ? formatCurrency(grandSaldo) : 'Al día ✓'}</span></div>
+          </div>
+        )}
 
         {filteredProviders.length === 0
           ? <p className="text-muted" style={{ textAlign: 'center', padding: '40px' }}>No hay registros aún.</p>
