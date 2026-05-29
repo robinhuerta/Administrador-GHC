@@ -6,7 +6,9 @@ import EditPagoModal from '../components/EditPagoModal';
 const FORM_EMPTY = { name: '', periodFrom: '', periodTo: '', hours: '', tarifa: '', total: '', paidAmount: '', paymentDate: '' };
 
 const DEFAULT_TARIFAS = {
-  ELVIRA: 12.5,
+  ELVIRA:  12.5,
+  ANNGELA: 7.6,
+  EDYTH:   6.3,
 };
 
 export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, updatePlanilla, pagos = [], addPago, deletePago, updatePago, isAdmin, formatCurrency, exportToCSV, searchQuery }) {
