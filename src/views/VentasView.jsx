@@ -52,7 +52,9 @@ function printDeliveryNote(venta) {
   win.document.close();
 }
 
-export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta, pagos = [], addPago, isAdmin, formatCurrency, exportToCSV, searchQuery, dateFilter }) {
+const COBRO_EMPTY = { date: '', amount: '', concept: '', paymentType: 'EFECTIVO', bank: '' };
+
+export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta, pagos = [], addPago, deletePago, updatePago, isAdmin, formatCurrency, exportToCSV, searchQuery, dateFilter }) {
   const [selectedClient, setSelectedClient] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
@@ -61,6 +63,8 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
   const [sortOrder, setSortOrder] = useState('asc');
+  const [editingCobro, setEditingCobro] = useState(null);
+  const [cobroForm, setCobroForm] = useState(COBRO_EMPTY);
 
   // Agrupar entregas por cliente
   const clientMap = ventas.reduce((acc, v) => {
@@ -271,24 +275,28 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
               <thead>
                 <tr>
                   <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
-                  <th>Monto</th><th>Concepto</th>
+                  <th>Monto</th><th>Concepto</th><th style={{ textAlign: 'center' }}>Acc.</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedCobros.length === 0
-                  ? <tr><td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin cobros aún</td></tr>
+                  ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin cobros aún</td></tr>
                   : sortedCobros.map(p => (
                     <tr key={p.id}>
                       <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
                       <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.amount)}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{p.concept || '—'}</td>
+                      <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <button className="btn-icon" style={{ color: '#60a5fa' }} title="Editar" onClick={() => { setEditingCobro(p.id); setCobroForm({ date: p.date, amount: p.amount, concept: p.concept || '', paymentType: p.paymentType || 'EFECTIVO', bank: p.bank || '' }); }}>✎</button>
+                        {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => deletePago(p.id)}>🗑</button>}
+                      </td>
                     </tr>
                   ))
                 }
               </tbody>
               <tfoot>
                 <tr style={{ background: 'rgba(0,0,0,0.25)', fontWeight: 'bold' }}>
-                  <td style={{ textAlign: 'right', padding: '10px 12px' }}>TOTAL:</td>
+                  <td colSpan="2" style={{ textAlign: 'right', padding: '10px 12px' }}>TOTAL:</td>
                   <td style={{ color: '#34d399', padding: '10px 12px' }}>{formatCurrency(totalPagado)}</td>
                   <td></td>
                 </tr>
@@ -324,6 +332,39 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
         addPago={addPago}
         formatCurrency={formatCurrency}
       />
+
+      <Modal isOpen={!!editingCobro} onClose={() => setEditingCobro(null)} title="Editar Cobro">
+        <form onSubmit={e => { e.preventDefault(); updatePago(editingCobro, { ...cobroForm, amount: parseFloat(cobroForm.amount) || 0 }); setEditingCobro(null); }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="form-group"><label>Fecha</label><input type="date" className="form-control" value={cobroForm.date} onChange={e => setCobroForm({ ...cobroForm, date: e.target.value })} required /></div>
+            <div className="form-group"><label>Monto (S/.)</label><input type="number" step="0.10" className="form-control" value={cobroForm.amount} onChange={e => setCobroForm({ ...cobroForm, amount: e.target.value })} required /></div>
+          </div>
+          <div className="form-group"><label>Concepto</label><input type="text" className="form-control" placeholder="Ej. JHONY" value={cobroForm.concept} onChange={e => setCobroForm({ ...cobroForm, concept: e.target.value })} /></div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div className="form-group">
+              <label>Tipo de Pago</label>
+              <select className="form-control" value={cobroForm.paymentType} onChange={e => setCobroForm({ ...cobroForm, paymentType: e.target.value })}>
+                <option value="EFECTIVO">EFECTIVO</option>
+                <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                <option value="WESTER">WESTER UNION</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Banco</label>
+              <select className="form-control" value={cobroForm.bank} onChange={e => setCobroForm({ ...cobroForm, bank: e.target.value })}>
+                <option value="">Ninguno</option>
+                <option value="BCP">BCP</option>
+                <option value="BBVA">BBVA</option>
+                <option value="INTERBANK">INTERBANK</option>
+              </select>
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button type="button" className="btn btn-danger" onClick={() => setEditingCobro(null)}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">Actualizar</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

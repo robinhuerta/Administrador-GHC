@@ -55,7 +55,7 @@ function App() {
   const [lotesTalleres, addTaller, deleteTaller, updateTaller] = useFirestoreCollection('ghc_lotes_talleres');
   const [insumos, addInsumo, deleteInsumo, updateInsumo] = useFirestoreCollection('ghc_insumos');
   const [cajaChica, addCajaChica, deleteCajaChica, updateCajaChica] = useFirestoreCollection('ghc_cajachica');
-  const [pagos, addPago] = useFirestoreCollection('ghc_pagos');
+  const [pagos, addPago, deletePago, updatePago] = useFirestoreCollection('ghc_pagos');
 
   // --- FILTROS GLOBALES ---
   const [searchQuery, setSearchQuery] = useState('');
@@ -233,7 +233,7 @@ function App() {
             formatCurrency={formatCurrency}
           />
         )}
-        {activeView === 'ventas' && <VentasView ventas={ventas} addVenta={addVenta} deleteVenta={deleteVenta} updateVenta={updateVenta} pagos={pagos} addPago={addPago} {...shared} />}
+        {activeView === 'ventas' && <VentasView ventas={ventas} addVenta={addVenta} deleteVenta={deleteVenta} updateVenta={updateVenta} pagos={pagos} addPago={addPago} deletePago={deletePago} updatePago={updatePago} {...shared} />}
         {activeView === 'planilla' && <PlanillaView planilla={planilla} addPlanilla={addPlanilla} deletePlanilla={deletePlanilla} updatePlanilla={updatePlanilla} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'sunat' && <SunatView sunat={sunat} addSunat={addSunat} deleteSunat={deleteSunat} updateSunat={updateSunat} pagos={pagos} addPago={addPago} {...shared} />}
         {activeView === 'insumos' && <InsumosView insumos={insumos} addInsumo={addInsumo} deleteInsumo={deleteInsumo} updateInsumo={updateInsumo} pagos={pagos} addPago={addPago} {...shared} />}
