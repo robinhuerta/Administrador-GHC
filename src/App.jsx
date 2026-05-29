@@ -9,6 +9,7 @@ import SunatView from './views/SunatView';
 import InsumosView from './views/InsumosView';
 import TalleresView from './views/TalleresView';
 import CajaChicaView from './views/CajaChicaView';
+import GastosFijosView from './views/GastosFijosView';
 import CleanupView from './views/CleanupView';
 import './index.css';
 
@@ -55,6 +56,7 @@ function App() {
   const [lotesTalleres, addTaller, deleteTaller, updateTaller] = useFirestoreCollection('ghc_lotes_talleres');
   const [insumos, addInsumo, deleteInsumo, updateInsumo] = useFirestoreCollection('ghc_insumos');
   const [cajaChica, addCajaChica, deleteCajaChica, updateCajaChica] = useFirestoreCollection('ghc_cajachica');
+  const [gastosFijos, addGasto, deleteGasto, updateGasto] = useFirestoreCollection('ghc_gastos_fijos');
   const [pagos, addPago, deletePago, updatePago] = useFirestoreCollection('ghc_pagos');
 
   // --- FILTROS GLOBALES ---
@@ -196,6 +198,7 @@ function App() {
           {nav('bordado',  '🪡', 'Bordados')}
           {nav('servicio', '🔧', 'Otros Servicios')}
           {nav('cajachica','💰', 'Caja Chica')}
+          {isAdmin && nav('gastosfijos','🏠', 'Gastos Fijos')}
         </nav>
 
         <div style={{ marginTop: 'auto', paddingTop: '16px', overflow: 'hidden' }}>
@@ -242,6 +245,7 @@ function App() {
         {activeView === 'bordado' && <TalleresView key="bordado" type="Bordado" lotes={lotesBordado} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} deletePago={deletePago} updatePago={updatePago} {...shared} />}
         {activeView === 'servicio' && <TalleresView key="servicio" type="Servicio" lotes={lotesServicio} addTaller={addTaller} deleteTaller={deleteTaller} updateTaller={updateTaller} pagos={pagos} addPago={addPago} deletePago={deletePago} updatePago={updatePago} {...shared} />}
         {activeView === 'cajachica' && <CajaChicaView cajaChica={cajaChica} addCajaChica={addCajaChica} deleteCajaChica={deleteCajaChica} updateCajaChica={updateCajaChica} {...shared} />}
+        {activeView === 'gastosfijos' && isAdmin && <GastosFijosView gastos={gastosFijos} addGasto={addGasto} deleteGasto={deleteGasto} updateGasto={updateGasto} {...shared} />}
         {activeView === 'cleanup' && isAdmin && <CleanupView />}
       </main>
     </div>
