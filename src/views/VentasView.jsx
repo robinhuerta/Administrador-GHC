@@ -216,14 +216,16 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
       </header>
 
       {/* Resumen rápido */}
-      <div className="stats-grid" style={{ marginBottom: '12px' }}>
-        <div className="glass-panel stat-card"><span className="text-muted">Total Entregas</span><span style={{ fontSize: '1.3rem', fontWeight: 700 }}>{formatCurrency(totalEntregas)}</span></div>
-        <div className="glass-panel stat-card"><span className="text-muted">Total Cobrado</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: '#34d399' }}>{formatCurrency(totalPagado)}</span></div>
-        <div className="glass-panel stat-card"><span className="text-muted">Saldo por Cobrar</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: saldo > 0 ? '#3b82f6' : '#34d399' }}>{saldo > 0 ? formatCurrency(saldo) : 'Cobrado ✓'}</span></div>
-      </div>
+      {isAdmin && (
+        <div className="stats-grid" style={{ marginBottom: '12px' }}>
+          <div className="glass-panel stat-card"><span className="text-muted">Total Entregas</span><span style={{ fontSize: '1.3rem', fontWeight: 700 }}>{formatCurrency(totalEntregas)}</span></div>
+          <div className="glass-panel stat-card"><span className="text-muted">Total Cobrado</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: '#34d399' }}>{formatCurrency(totalPagado)}</span></div>
+          <div className="glass-panel stat-card"><span className="text-muted">Saldo por Cobrar</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: saldo > 0 ? '#3b82f6' : '#34d399' }}>{saldo > 0 ? formatCurrency(saldo) : 'Cobrado ✓'}</span></div>
+        </div>
+      )}
 
-      {/* Cuaderno: 2 columnas */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
+      {/* Cuaderno: entregas (y cobros solo para admin) */}
+      <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1fr 1fr' : '1fr', gap: '16px', alignItems: 'start' }}>
 
         {/* DEBE — Entregas realizadas */}
         <div className="glass-panel" style={{ padding: 0 }}>
@@ -271,8 +273,8 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
           </div>
         </div>
 
-        {/* HABER — Cobros recibidos */}
-        <div className="glass-panel" style={{ padding: 0 }}>
+        {/* HABER — Cobros recibidos (solo admin) */}
+        {isAdmin && <div className="glass-panel" style={{ padding: 0 }}>
           <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 700, color: '#34d399' }}>💰 COBROS RECIBIDOS</span>
             <button className="btn btn-primary" style={{ padding: '5px 12px', fontSize: '0.8rem' }} onClick={() => setIsPaymentOpen(true)}>+ Cobro</button>
@@ -310,7 +312,7 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
               </tfoot>
             </table>
           </div>
-        </div>
+        </div>}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={handleClose}
