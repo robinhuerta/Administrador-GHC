@@ -215,12 +215,11 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
         <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(clientVentas, `Ventas_${selectedClient}`)}>📊 Exportar</button>
       </header>
 
-      {/* Saldo banner */}
-      <div className="glass-panel" style={{ marginBottom: '16px', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#3b82f6' : '#34d399'}` }}>
-        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO POR COBRAR</span>
-        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#3b82f6' : '#34d399' }}>
-          {saldo > 0 ? formatCurrency(saldo) : 'Cobrado ✓'}
-        </span>
+      {/* Resumen rápido */}
+      <div className="stats-grid" style={{ marginBottom: '12px' }}>
+        <div className="glass-panel stat-card"><span className="text-muted">Total Entregas</span><span style={{ fontSize: '1.3rem', fontWeight: 700 }}>{formatCurrency(totalEntregas)}</span></div>
+        <div className="glass-panel stat-card"><span className="text-muted">Total Cobrado</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: '#34d399' }}>{formatCurrency(totalPagado)}</span></div>
+        <div className="glass-panel stat-card"><span className="text-muted">Saldo por Cobrar</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: saldo > 0 ? '#3b82f6' : '#34d399' }}>{saldo > 0 ? formatCurrency(saldo) : 'Cobrado ✓'}</span></div>
       </div>
 
       {/* Cuaderno: 2 columnas */}
