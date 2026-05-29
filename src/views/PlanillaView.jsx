@@ -142,10 +142,18 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
       </header>
 
       {/* Resumen rápido */}
-      <div className="stats-grid" style={{ marginBottom: '16px' }}>
+      <div className="stats-grid" style={{ marginBottom: '12px' }}>
         <div className="glass-panel stat-card"><span className="text-muted">Total Horas</span><span style={{ fontSize: '1.3rem', fontWeight: 700 }}>{totalHoras.toFixed(2)} h</span></div>
         <div className="glass-panel stat-card"><span className="text-muted">Total Ganado</span><span style={{ fontSize: '1.3rem', fontWeight: 700 }}>{formatCurrency(totalTrabajo)}</span></div>
         <div className="glass-panel stat-card"><span className="text-muted">Total Pagado</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: '#34d399' }}>{formatCurrency(totalPagado)}</span></div>
+      </div>
+
+      {/* Saldo banner — visible sin scroll */}
+      <div className="glass-panel" style={{ marginBottom: '16px', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#f59e0b' : '#34d399'}` }}>
+        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO PENDIENTE</span>
+        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#f59e0b' : '#34d399' }}>
+          {saldo > 0 ? formatCurrency(saldo) : 'Cancelado ✓'}
+        </span>
       </div>
 
       {/* Cuaderno: 2 columnas */}
@@ -225,14 +233,6 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
             </tfoot>
           </table>
         </div>
-      </div>
-
-      {/* Saldo banner */}
-      <div className="glass-panel" style={{ marginTop: '16px', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#f59e0b' : '#34d399'}` }}>
-        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO PENDIENTE</span>
-        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#f59e0b' : '#34d399' }}>
-          {saldo > 0 ? formatCurrency(saldo) : 'Cancelado ✓'}
-        </span>
       </div>
 
       <Modal isOpen={isModalOpen} onClose={handleClose} title={editingId ? 'Editar Planilla' : `Registrar Período — ${selectedWorker}`}>

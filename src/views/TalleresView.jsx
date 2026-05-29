@@ -157,6 +157,14 @@ export default function TalleresView({ type, lotes, pagos = [], addTaller, delet
         <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(providerLotes, `${type}_${selectedProvider}`)}>📊 Exportar</button>
       </header>
 
+      {/* Saldo banner */}
+      <div className="glass-panel" style={{ marginBottom: '16px', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#f59e0b' : '#34d399'}` }}>
+        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO PENDIENTE</span>
+        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#f59e0b' : '#34d399' }}>
+          {saldo > 0 ? formatCurrency(saldo) : 'Al día ✓'}
+        </span>
+      </div>
+
       {/* Cuaderno: 2 columnas */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
 
@@ -243,14 +251,6 @@ export default function TalleresView({ type, lotes, pagos = [], addTaller, delet
             </table>
           </div>
         </div>
-      </div>
-
-      {/* Saldo banner */}
-      <div className="glass-panel" style={{ marginTop: '16px', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#f59e0b' : '#34d399'}` }}>
-        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO PENDIENTE</span>
-        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#f59e0b' : '#34d399' }}>
-          {saldo > 0 ? formatCurrency(saldo) : 'Cancelado ✓'}
-        </span>
       </div>
 
       {/* Modal lote */}

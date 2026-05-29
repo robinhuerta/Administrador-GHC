@@ -148,6 +148,14 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
         <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(providerInsumos, `Insumos_${selectedProvider}`)}>📊 Exportar</button>
       </header>
 
+      {/* Saldo banner */}
+      <div className="glass-panel" style={{ marginBottom: '16px', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#f59e0b' : '#34d399'}` }}>
+        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO PENDIENTE</span>
+        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#f59e0b' : '#34d399' }}>
+          {saldo > 0 ? formatCurrency(saldo) : 'Al día ✓'}
+        </span>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
 
         {/* COMPRAS REALIZADAS */}
@@ -227,14 +235,6 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
             </tfoot>
           </table>
         </div>
-      </div>
-
-      {/* Saldo banner */}
-      <div className="glass-panel" style={{ marginTop: '16px', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#f59e0b' : '#34d399'}` }}>
-        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO PENDIENTE</span>
-        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#f59e0b' : '#34d399' }}>
-          {saldo > 0 ? formatCurrency(saldo) : 'Cancelado ✓'}
-        </span>
       </div>
 
       <Modal isOpen={isModalOpen} onClose={handleClose} title={editingId ? 'Editar Compra' : `Nueva Compra — ${selectedProvider}`}>

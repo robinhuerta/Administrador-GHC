@@ -215,6 +215,14 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
         <button className="btn" style={{ background: '#3b82f6', color: 'white' }} onClick={() => exportToCSV(clientVentas, `Ventas_${selectedClient}`)}>📊 Exportar</button>
       </header>
 
+      {/* Saldo banner */}
+      <div className="glass-panel" style={{ marginBottom: '16px', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#3b82f6' : '#34d399'}` }}>
+        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO POR COBRAR</span>
+        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#3b82f6' : '#34d399' }}>
+          {saldo > 0 ? formatCurrency(saldo) : 'Cobrado ✓'}
+        </span>
+      </div>
+
       {/* Cuaderno: 2 columnas */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', alignItems: 'start' }}>
 
@@ -304,14 +312,6 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
             </table>
           </div>
         </div>
-      </div>
-
-      {/* Saldo banner */}
-      <div className="glass-panel" style={{ marginTop: '16px', padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: `4px solid ${saldo > 0 ? '#3b82f6' : '#34d399'}` }}>
-        <span style={{ fontWeight: 600, fontSize: '1rem' }}>SALDO POR COBRAR</span>
-        <span style={{ fontWeight: 700, fontSize: '1.6rem', color: saldo > 0 ? '#3b82f6' : '#34d399' }}>
-          {saldo > 0 ? formatCurrency(saldo) : 'Cobrado ✓'}
-        </span>
       </div>
 
       <Modal isOpen={isModalOpen} onClose={handleClose}
