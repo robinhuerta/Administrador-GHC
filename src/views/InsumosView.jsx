@@ -14,9 +14,11 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
   const [sortOrder, setSortOrder] = useState('asc');
   const [editingPago, setEditingPago] = useState(null);
 
+  const normName = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().trim() || 'Sin proveedor';
+
   // Agrupar compras por proveedor
   const providerMap = insumos.reduce((acc, i) => {
-    const name = i.provider || 'Sin proveedor';
+    const name = normName(i.provider);
     if (!acc[name]) acc[name] = { name, totalCost: 0, count: 0 };
     acc[name].totalCost += parseFloat(i.totalCost) || 0;
     acc[name].count += 1;
@@ -26,8 +28,9 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
   // Pagos por proveedor (ghc_pagos)
   const pagadoMap = pagos.reduce((acc, p) => {
     if (p.tallerType !== 'Insumos') return acc;
-    if (!acc[p.beneficiary]) acc[p.beneficiary] = 0;
-    acc[p.beneficiary] += parseFloat(p.amount) || 0;
+    const key = normName(p.beneficiary);
+    if (!acc[key]) acc[key] = 0;
+    acc[key] += parseFloat(p.amount) || 0;
     return acc;
   }, {});
 
@@ -43,7 +46,7 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
   // Compras del proveedor seleccionado
   const providerInsumos = selectedProvider
     ? insumos.filter(i => {
-        if (i.provider !== selectedProvider) return false;
+        if (normName(i.provider) !== selectedProvider) return false;
         const q = searchQuery.toLowerCase();
         const matchSearch = !q || (i.invoice && i.invoice.toLowerCase().includes(q));
         const matchDate = !dateFilter || i.date === dateFilter;
@@ -53,7 +56,7 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
 
   // Pagos del proveedor seleccionado (ghc_pagos)
   const providerPagos = selectedProvider
-    ? pagos.filter(p => p.beneficiary === selectedProvider && p.tallerType === 'Insumos')
+    ? pagos.filter(p => normName(p.beneficiary) === selectedProvider && p.tallerType === 'Insumos')
         .sort((a, b) => b.createdAt - a.createdAt)
     : [];
 

@@ -81,7 +81,7 @@ ws.eachRow((row, rowNum) => {
   if (rowNum < 4) return;
   const v = row.values;
 
-  const provider = typeof v[2] === 'string' ? v[2].trim() : '';
+  const provider = (typeof v[2] === 'string' ? v[2].trim() : '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
   const invoice  = typeof v[3] === 'string' ? v[3].trim() : '';
   const date     = formatDate(v[4]);
   const total    = typeof v[5] === 'number' ? v[5] : 0;
