@@ -1,6 +1,6 @@
 export default function DashboardView({
   totalIngresos, totalEgresos, totalPagadoPlanilla, totalPagadoSunat,
-  totalPagadoTalleres, totalPagadoInsumos, egresosCajaChica,
+  totalPagadoTalleres, totalPagadoInsumos, egresosCajaChica, totalGastosFijos = 0,
   saldoPorCobrarClientes, deudaTalleres, deudaPlanilla, deudaSunat, deudaInsumos,
   formatCurrency
 }) {
@@ -77,6 +77,7 @@ export default function DashboardView({
             { label: 'Insumos / Compras', amount: totalPagadoInsumos, color: '#60a5fa' },
             { label: 'SUNAT / Contador', amount: totalPagadoSunat, color: '#f472b6' },
             { label: 'Caja Chica', amount: egresosCajaChica, color: '#a78bfa' },
+            { label: 'Gastos Fijos', amount: totalGastosFijos, color: '#fb923c' },
           ].map(item => {
             const pct = totalEgresos > 0 ? (item.amount / totalEgresos) * 100 : 0;
             return (

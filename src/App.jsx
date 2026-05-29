@@ -73,7 +73,8 @@ function App() {
   const totalPagadoSunat    = sumarPagos('Sunat');
   const totalPagadoInsumos  = sumarPagos('Insumos');
   const egresosCajaChica = cajaChica.filter(c => c.type === 'Egreso').reduce((a, c) => a + (parseFloat(c.amount) || 0), 0);
-  const totalEgresos = totalPagadoPlanilla + totalPagadoSunat + totalPagadoTalleres + totalPagadoInsumos + egresosCajaChica;
+  const totalGastosFijos = gastosFijos.reduce((a, g) => a + (parseFloat(g.amount) || 0), 0);
+  const totalEgresos = totalPagadoPlanilla + totalPagadoSunat + totalPagadoTalleres + totalPagadoInsumos + egresosCajaChica + totalGastosFijos;
 
   // Deudas: total registrado - total pagado desde ghc_pagos
   const totalVentasValue   = ventas.reduce((a, c) => a + (parseFloat(c.totalValue) || 0), 0);
@@ -230,7 +231,7 @@ function App() {
             totalIngresos={totalIngresos} totalEgresos={totalEgresos}
             totalPagadoPlanilla={totalPagadoPlanilla} totalPagadoSunat={totalPagadoSunat}
             totalPagadoTalleres={totalPagadoTalleres} totalPagadoInsumos={totalPagadoInsumos}
-            egresosCajaChica={egresosCajaChica}
+            egresosCajaChica={egresosCajaChica} totalGastosFijos={totalGastosFijos}
             saldoPorCobrarClientes={saldoPorCobrarClientes} deudaTalleres={deudaTalleres}
             deudaPlanilla={deudaPlanilla} deudaSunat={deudaSunat} deudaInsumos={deudaInsumos}
             formatCurrency={formatCurrency}
