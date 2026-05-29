@@ -60,6 +60,7 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
   const [lastVenta, setLastVenta] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
+  const [sortOrder, setSortOrder] = useState('asc');
 
   // Agrupar entregas por cliente
   const clientMap = ventas.reduce((acc, v) => {
@@ -103,6 +104,13 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
     ? pagos.filter(p => p.beneficiary === selectedClient && p.tallerType === 'Ventas')
         .sort((a, b) => b.createdAt - a.createdAt)
     : [];
+
+  const sortedVentas = [...clientVentas].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
+  const sortedCobros = [...clientPagos].sort((a, b) =>
+    sortOrder === 'asc' ? (a.date || '').localeCompare(b.date || '') : (b.date || '').localeCompare(a.date || '')
+  );
 
   const totalEntregas = clientVentas.reduce((a, v) => a + (parseFloat(v.totalValue) || 0), 0);
   const totalPagado = clientPagos.reduce((a, p) => a + (parseFloat(p.amount) || 0), 0);
@@ -215,12 +223,16 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
           <div style={{ overflowX: 'auto' }}>
             <table style={{ fontSize: '0.82rem', width: '100%' }}>
               <thead>
-                <tr><th>Código / Modelo</th><th>Fecha</th><th>Cant.</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th></tr>
+                <tr>
+                  <th>Código / Modelo</th>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
+                  <th>Cant.</th><th>Total</th><th style={{ textAlign: 'center' }}>Acc.</th>
+                </tr>
               </thead>
               <tbody>
-                {clientVentas.length === 0
+                {sortedVentas.length === 0
                   ? <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin entregas aún</td></tr>
-                  : clientVentas.map(v => (
+                  : sortedVentas.map(v => (
                     <tr key={v.id}>
                       <td>
                         <div style={{ fontWeight: 600 }}>{v.code}</div>
@@ -257,12 +269,15 @@ export default function VentasView({ ventas, addVenta, deleteVenta, updateVenta,
           <div style={{ overflowX: 'auto' }}>
             <table style={{ fontSize: '0.82rem', width: '100%' }}>
               <thead>
-                <tr><th>Fecha</th><th>Monto</th><th>Concepto</th></tr>
+                <tr>
+                  <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
+                  <th>Monto</th><th>Concepto</th>
+                </tr>
               </thead>
               <tbody>
-                {clientPagos.length === 0
+                {sortedCobros.length === 0
                   ? <tr><td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin cobros aún</td></tr>
-                  : clientPagos.map(p => (
+                  : sortedCobros.map(p => (
                     <tr key={p.id}>
                       <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
                       <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.amount)}</td>
