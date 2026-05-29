@@ -71,6 +71,14 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
   const totalPagado  = providerPagos.reduce((a, p) => a + (parseFloat(p.amount) || 0), 0);
   const saldo = totalCompras - totalPagado;
 
+  const deleteProvider = async (providerName) => {
+    if (!window.confirm(`¿Eliminar TODOS los registros de "${providerName}"?\nEsto borrará sus compras y pagos. No se puede deshacer.`)) return;
+    const toDelete = insumos.filter(i => normName(i.provider) === providerName);
+    const pagosToDelete = pagos.filter(p => normName(p.beneficiary) === providerName && p.tallerType === 'Insumos');
+    await Promise.all(toDelete.map(i => deleteInsumo(i.id)));
+    await Promise.all(pagosToDelete.map(p => deletePago(p.id)));
+  };
+
   const emptyForm = { ...FORM_EMPTY, provider: selectedProvider || '' };
   const openNew  = () => { setEditingId(null); setForm(emptyForm); setIsModalOpen(true); };
   const openEdit = (i) => { setEditingId(i.id); setForm({ date: i.date, provider: i.provider, invoice: i.invoice, totalCost: i.totalCost }); setIsModalOpen(true); };
@@ -109,9 +117,15 @@ export default function InsumosView({ insumos, addInsumo, deleteInsumo, updateIn
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                       <span style={{ fontSize: '1.1rem', fontWeight: 700 }}>🛍️ {p.name}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.07)', padding: '2px 10px', borderRadius: '12px' }}>
-                        {p.count} compra{p.count !== 1 ? 's' : ''}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.07)', padding: '2px 10px', borderRadius: '12px' }}>
+                          {p.count} compra{p.count !== 1 ? 's' : ''}
+                        </span>
+                        {isAdmin && (
+                          <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar proveedor"
+                            onClick={e => { e.stopPropagation(); deleteProvider(p.name); }}>🗑</button>
+                        )}
+                      </div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.85rem' }}>
                       <div><div style={{ color: 'var(--text-muted)' }}>Total compras</div><div style={{ fontWeight: 600 }}>{formatCurrency(p.totalCost)}</div></div>
