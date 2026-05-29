@@ -3,7 +3,7 @@ import Modal from '../components/Modal';
 import PaymentModal from '../components/PaymentModal';
 import EditPagoModal from '../components/EditPagoModal';
 
-const FORM_EMPTY = { name: '', periodFrom: '', periodTo: '', hours: '', total: '', paidAmount: '', paymentDate: '' };
+const FORM_EMPTY = { name: '', periodFrom: '', periodTo: '', hours: '', tarifa: '', total: '', paidAmount: '', paymentDate: '' };
 
 export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, updatePlanilla, pagos = [], addPago, deletePago, updatePago, isAdmin, formatCurrency, exportToCSV, searchQuery }) {
   const [selectedWorker, setSelectedWorker] = useState(null);
@@ -255,17 +255,44 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
 }
 
 function PlanillaForm({ form, setForm, onSubmit, onCancel, editingId, showName }) {
+  const horas = parseFloat(form.hours) || 0;
+  const tarifa = parseFloat(form.tarifa) || 0;
+
+  const handleHorasChange = (e) => {
+    const h = e.target.value;
+    const t = tarifa ? (parseFloat(h) || 0) * tarifa : form.total;
+    setForm({ ...form, hours: h, total: tarifa ? t.toFixed(2) : form.total });
+  };
+
+  const handleTarifaChange = (e) => {
+    const t = e.target.value;
+    const total = horas ? horas * (parseFloat(t) || 0) : form.total;
+    setForm({ ...form, tarifa: t, total: horas ? total.toFixed(2) : form.total });
+  };
+
   return (
     <form onSubmit={onSubmit}>
       {showName && (
         <div className="form-group"><label>Nombre del Trabajador</label><input type="text" className="form-control" placeholder="Ej. ANNGELA" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         <div className="form-group"><label>Desde</label><input type="date" className="form-control" value={form.periodFrom} onChange={e => setForm({ ...form, periodFrom: e.target.value })} required /></div>
         <div className="form-group"><label>Hasta</label><input type="date" className="form-control" value={form.periodTo} onChange={e => setForm({ ...form, periodTo: e.target.value })} required /></div>
-        <div className="form-group"><label>Horas</label><input type="number" step="0.01" className="form-control" placeholder="51.44" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} required /></div>
       </div>
-      <div className="form-group"><label>Total a Pagar (S/.)</label><input type="number" step="0.10" className="form-control" value={form.total} onChange={e => setForm({ ...form, total: e.target.value })} required /></div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div className="form-group">
+          <label>Horas trabajadas</label>
+          <input type="number" step="0.01" className="form-control" placeholder="51.44" value={form.hours} onChange={handleHorasChange} required />
+        </div>
+        <div className="form-group">
+          <label>Tarifa (S/. × hora)</label>
+          <input type="number" step="0.0001" className="form-control" placeholder="7.6364" value={form.tarifa || ''} onChange={handleTarifaChange} />
+        </div>
+      </div>
+      <div className="form-group">
+        <label>Total a Pagar (S/.) {tarifa > 0 && horas > 0 && <span style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>— calculado automáticamente</span>}</label>
+        <input type="number" step="0.01" className="form-control" value={form.total} onChange={e => setForm({ ...form, total: e.target.value })} required />
+      </div>
       <div className="modal-footer">
         <button type="button" className="btn btn-danger" onClick={onCancel}>Cancelar</button>
         <button type="submit" className="btn btn-primary">{editingId ? 'Actualizar' : 'Guardar'}</button>
