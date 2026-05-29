@@ -1,16 +1,18 @@
 import { useState } from 'react';
 import Modal from '../components/Modal';
 import PaymentModal from '../components/PaymentModal';
+import EditPagoModal from '../components/EditPagoModal';
 
 const FORM_EMPTY = { name: '', periodFrom: '', periodTo: '', hours: '', total: '', paidAmount: '', paymentDate: '' };
 
-export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, updatePlanilla, pagos = [], addPago, isAdmin, formatCurrency, exportToCSV, searchQuery }) {
+export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, updatePlanilla, pagos = [], addPago, deletePago, updatePago, isAdmin, formatCurrency, exportToCSV, searchQuery }) {
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
   const [sortOrder, setSortOrder] = useState('asc');
+  const [editingPago, setEditingPago] = useState(null);
 
   // Agrupar por trabajador
   const workerMap = planilla.reduce((acc, item) => {
@@ -200,12 +202,16 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
             </tr></thead>
             <tbody>
               {sortedWorkerPagos.length === 0
-                ? <tr><td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin pagos aún</td></tr>
+                ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin pagos aún</td></tr>
                 : sortedWorkerPagos.map(p => (
                   <tr key={p.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
                     <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.amount)}</td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{p.concept || '—'}</td>
+                    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <button className="btn-icon" style={{ color: '#60a5fa' }} title="Editar" onClick={() => setEditingPago(p)}>✎</button>
+                      {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => deletePago(p.id)}>🗑</button>}
+                    </td>
                   </tr>
                 ))
               }
@@ -233,6 +239,7 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
         <PlanillaForm form={form} setForm={setForm} onSubmit={handleSubmit} onCancel={handleClose} editingId={editingId} showName={false} />
       </Modal>
 
+      <EditPagoModal pago={editingPago} onClose={() => setEditingPago(null)} updatePago={updatePago} />
       <PaymentModal
         isOpen={isPaymentOpen}
         onClose={() => setIsPaymentOpen(false)}

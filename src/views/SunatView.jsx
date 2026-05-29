@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Modal from '../components/Modal';
 import PaymentModal from '../components/PaymentModal';
+import EditPagoModal from '../components/EditPagoModal';
 
 const CATEGORIES = [
   { key: 'Renta',           icon: '📊', desc: 'Impuesto a la renta mensual y anual.' },
@@ -10,13 +11,14 @@ const CATEGORIES = [
 
 const FORM_EMPTY = { date: '', description: '', total: '', category: 'Renta' };
 
-export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, pagos = [], addPago, isAdmin, formatCurrency, exportToCSV, searchQuery, dateFilter }) {
+export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, pagos = [], addPago, deletePago, updatePago, isAdmin, formatCurrency, exportToCSV, searchQuery, dateFilter }) {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(FORM_EMPTY);
   const [sortOrder, setSortOrder] = useState('asc');
+  const [editingPago, setEditingPago] = useState(null);
 
   // Total deuda por categoría (de los registros)
   const deudaMap = sunat.reduce((acc, s) => {
@@ -191,16 +193,20 @@ export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, p
           <table style={{ fontSize: '0.82rem', width: '100%' }}>
             <thead><tr>
               <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => setSortOrder(s => s === 'asc' ? 'desc' : 'asc')}>Fecha {sortOrder === 'asc' ? '↑' : '↓'}</th>
-              <th>Monto</th><th>Concepto</th>
+              <th>Monto</th><th>Concepto</th><th style={{ textAlign: 'center' }}>Acc.</th>
             </tr></thead>
             <tbody>
               {sortedCatPagos.length === 0
-                ? <tr><td colSpan="3" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin pagos aún</td></tr>
+                ? <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>Sin pagos aún</td></tr>
                 : sortedCatPagos.map(p => (
                   <tr key={p.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{p.date}</td>
                     <td style={{ fontWeight: 600, color: '#34d399' }}>{formatCurrency(p.amount)}</td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{p.concept || '—'}</td>
+                    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <button className="btn-icon" style={{ color: '#60a5fa' }} title="Editar" onClick={() => setEditingPago(p)}>✎</button>
+                      {isAdmin && <button className="btn-icon" style={{ color: 'var(--danger)' }} title="Eliminar" onClick={() => deletePago(p.id)}>🗑</button>}
+                    </td>
                   </tr>
                 ))
               }
@@ -238,6 +244,7 @@ export default function SunatView({ sunat, addSunat, deleteSunat, updateSunat, p
         addPago={addPago}
         formatCurrency={formatCurrency}
       />
+      <EditPagoModal pago={editingPago} onClose={() => setEditingPago(null)} updatePago={updatePago} />
     </div>
   );
 }
