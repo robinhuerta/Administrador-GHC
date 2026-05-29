@@ -5,6 +5,10 @@ import EditPagoModal from '../components/EditPagoModal';
 
 const FORM_EMPTY = { name: '', periodFrom: '', periodTo: '', hours: '', tarifa: '', total: '', paidAmount: '', paymentDate: '' };
 
+const DEFAULT_TARIFAS = {
+  ELVIRA: 12.5,
+};
+
 export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, updatePlanilla, pagos = [], addPago, deletePago, updatePago, isAdmin, formatCurrency, exportToCSV, searchQuery }) {
   const [selectedWorker, setSelectedWorker] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,8 +68,9 @@ export default function PlanillaView({ planilla, addPlanilla, deletePlanilla, up
   const totalHoras = workerPeriodos.reduce((a, c) => a + (parseFloat(c.hours) || 0), 0);
   const saldo = totalTrabajo - totalPagado;
 
-  const openNew = () => { setEditingId(null); setForm({ ...FORM_EMPTY, name: selectedWorker || '' }); setIsModalOpen(true); };
-  const openEdit = (item) => { setEditingId(item.id); setForm(item); setIsModalOpen(true); };
+  const withTarifa = (f) => ({ ...f, tarifa: f.tarifa || DEFAULT_TARIFAS[f.name] || '' });
+  const openNew = () => { setEditingId(null); setForm(withTarifa({ ...FORM_EMPTY, name: selectedWorker || '' })); setIsModalOpen(true); };
+  const openEdit = (item) => { setEditingId(item.id); setForm(withTarifa(item)); setIsModalOpen(true); };
   const handleClose = () => { setIsModalOpen(false); setEditingId(null); };
 
   const handleSubmit = (e) => {
