@@ -48,6 +48,13 @@ export default function CajaChicaView({ cajaChica, addCajaChica, deleteCajaChica
         </div>
       </header>
 
+      {/* Resumen rápido */}
+      <div className="stats-grid" style={{ marginBottom: '12px' }}>
+        <div className="glass-panel stat-card"><span className="text-muted">Total Entradas</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: '#34d399' }}>{formatCurrency(totalIngresos)}</span></div>
+        <div className="glass-panel stat-card"><span className="text-muted">Total Salidas</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: '#ef4444' }}>{formatCurrency(totalEgresos)}</span></div>
+        <div className="glass-panel stat-card"><span className="text-muted">Saldo</span><span style={{ fontSize: '1.3rem', fontWeight: 700, color: totalIngresos - totalEgresos >= 0 ? '#34d399' : '#ef4444' }}>{formatCurrency(totalIngresos - totalEgresos)}</span></div>
+      </div>
+
       <div className="glass-panel table-container">
         {filtered.length === 0
           ? <p className="text-muted" style={{ textAlign: 'center', padding: '20px' }}>No hay registros que coincidan.</p>
